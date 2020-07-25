@@ -14,15 +14,18 @@
         d) Zadavanjem različitih izraza poput:
             image_[increment_from_1] -> generiše image_1, image_2 ...
             
-        *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje originalnih naziva
+        *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje
+           originalnih naziva
 
 ### 3. Reorganizacija strukture foldera
-       Mogućnost organizovanja fajlova na zadatoj putanji (rekurzivno ili ne) tako što bi se odvojili u posebne foldere na osnovu:
+       Mogućnost organizovanja fajlova na zadatoj putanji (rekurzivno ili ne) tako što bi se odvojili u 
+       posebne foldere na osnovu:
          a) Tipa fajla
          b) Veličine fajla
          c) Datuma kreiranja (po mesecima ili godinama) 
          
-         *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje originalne strukture
+         *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje 
+            originalne strukture
          
 Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju gde je to moguće (npr. prilikom učitavanja i kreiranja stabla).
 
