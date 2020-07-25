@@ -1,5 +1,9 @@
 # Analiza i organizacija fajl sistema
 
+### Autor
+    Ana Mijailović, SW13/2016
+    mijailovic.sw13.2016@uns.ac.rs
+
 ### 1. Analiza i vizualizacija fajl sistema
       a) Prikaz u vidu stabla počeviši od odabrane putanje
       b) Bar Chart i Pie Chart prikazi po:
@@ -7,17 +11,7 @@
           - Zauzeću memorije
           - Datumima kreiranja/korišćenja
 
-### 2. Preimenovanje svih foldera/fajlova na zadatoj putanji
-        a) Generisanjem random naziva
-        b) Zadavanjem prefiksa/sufiksa koji se dodaju na postojeći naziv
-        c) Uklanjanjem zadatog dela naziva ili zamenom tog dela naziva novim
-        d) Zadavanjem različitih izraza poput:
-            image_[increment_from_1] -> generiše image_1, image_2 ...
-            
-        *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje
-           originalnih naziva
-
-### 3. Reorganizacija strukture foldera
+### 2. Reorganizacija strukture foldera
        Mogućnost organizovanja fajlova na zadatoj putanji (rekurzivno ili ne) tako što bi se odvojili u 
        posebne foldere na osnovu:
          a) Tipa fajla
@@ -26,7 +20,26 @@
          
          *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje 
             originalne strukture
-         
-Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju gde je to moguće (npr. prilikom učitavanja i kreiranja stabla).
+            
+### 3. Preimenovanje svih foldera/fajlova na zadatoj putanji
+        a) Generisanjem random naziva
+        b) Zadavanjem prefiksa/sufiksa koji se dodaju na postojeći naziv
+        c) Uklanjanjem zadatog dela naziva ili zamenom tog dela naziva novim
+        d) Zadavanjem različitih izraza poput:
+            image_[increment_from_1] -> generiše image_1, image_2 ...
+            
+        *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje
+           originalnih naziva
+           
+### 4. Birisanje
+       Brisanje svih fajlova i foldera na zadatoj putanji (rekurzivno ili ne) koji su:
+       a) Prazni
+       b) Kreirani pre zadatog vremena
+       c) Nisu korišćeni zadati vremenski period
 
-Vizualizacije bi bile implementirane uz oslonac na programski jezik *Pharo*. 
+         
+Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju (*goroutine*) gde je to moguće (npr. prilikom učitavanja i kreiranja stabla).
+
+GUI deo aplikacije iz kog je moguće pozivanje svih navedenih operacija bi bio implementiran uz oslonac na programski jezik *Pharo*. 
+
+Takođe bi bilo moguće i pozivanje operacija(2, 3 i 4) iz komandne linije (implementacija korišćenjem [*Cobra*](https://github.com/spf13/cobra) *Golang* biblioteke).
