@@ -1,11 +1,11 @@
-# Analiza i organizacija fajl sistema
+# Analiza i organizacija fajlova i foldera
 
 ### Autor
     Ana Mijailović, SW13/2016
     mijailovic.sw13.2016@uns.ac.rs
 
-### 1. Analiza i vizualizacija fajl sistema
-      a) Prikaz u vidu stabla počeviši od odabrane putanje
+### 1. Analiza i vizualizacija fajlova i foldera
+      a) Prikaz u vidu stabla počevši od odabrane putanje
       b) Bar Chart i Pie Chart prikazi po:
           - Tipovima fajla
           - Zauzeću memorije
@@ -31,14 +31,14 @@
         *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje
            originalnih naziva
            
-### 4. Birisanje
+### 4. Brisanje
        Brisanje svih fajlova i foldera na zadatoj putanji (rekurzivno ili ne) koji su:
        a) Prazni
        b) Kreirani pre zadatog vremena
        c) Nisu korišćeni zadati vremenski period
 
          
-Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju (*goroutine*) gde je to moguće (npr. prilikom učitavanja i kreiranja stabla).
+Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju (*goroutine*) gde je to moguće (npr. prilikom učitavanja fajlova i foldera i kreiranja stabla).
 
 GUI deo aplikacije iz kog je moguće pozivanje svih navedenih operacija bi bio implementiran uz oslonac na programski jezik *Pharo*. 
 
