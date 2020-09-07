@@ -12,6 +12,7 @@ Class {
 		'fileTypesBtn',
 		'creationDateBtn',
 		'accessedDateBtn',
+		'modifiedDateBtn',
 		'showBtn',
 		'chart'
 	],
@@ -35,6 +36,7 @@ ArfMainWin class >> defaultLayout [
 						   add: #fileTypesBtn  withConstraints: [ :constraints | constraints height: 25];
 			       		add: #creationDateBtn  withConstraints: [ :constraints | constraints height: 25];
 			       		add: #accessedDateBtn withConstraints: [ :constraints | constraints height: 25];
+							add: #modifiedDateBtn withConstraints: [ :constraints | constraints height: 25];
 							add: #showBtn withConstraints: [:constraints | constraints height: 30]) expand: false fill: false padding: 30;
 					 		add: #chart expand: true fill: true padding: 10
 							);
@@ -73,11 +75,64 @@ ArfMainWin >> drawBarChart: canvas path: path [
 ]
 
 { #category : #'canvas drawing' }
+ArfMainWin >> drawBarChart: canvas path: path chartType: chartType [
+
+	| bar data xData yData|
+	
+	data := self getChartData: path chartType: chartType.
+	xData := data values.
+	"xData := xData collect: [ :each | each asString  ]."
+	yData := data values.
+	self inform: yData.
+	bar := RSChart new
+			container: canvas.
+	bar addPlot: (RSBarPlot new x: xData y: yData).
+	
+	bar addDecoration: (RSVerticalTick new 
+		numberOfTicks: 5;
+		asFloat).
+	bar xlabel: 'Type'.
+	bar ylabel: 'Size'.
+	
+	bar renderIn: canvas.
+	bar canvas when: RSExtentChangedEvent do: [ bar canvas zoomToFit ].
+]
+
+{ #category : #'canvas drawing' }
 ArfMainWin >> drawPieChart: canvas path: path [
 
 	| pie pieLabel data |
 	
 	data := ( self getChartData: path ) associations.
+
+	pie := RSPie new
+		container: canvas;
+		objects: data;
+		slice: #value.
+		
+	pie sliceShape
+		segmentSpacing: 0;
+		externalRadius: 100;
+		innerRadius: 50.
+	pie sliceColor: NSScale category20.
+	
+	pieLabel := RSPieLabeled new.
+	pieLabel labelShape fontSize: 4.
+	pieLabel labelText: [ :obj | 
+		obj key, '  (', (obj value * 100 / pie totalSum) rounded asString, ' % )'].
+	
+	pie build.
+	pie canvas when: RSExtentChangedEvent do: [ pie canvas zoomToFit ].
+	pie shapes @ pieLabel.
+
+]
+
+{ #category : #'canvas drawing' }
+ArfMainWin >> drawPieChart: canvas path: path chartType: chartType [
+
+	| pie pieLabel data |
+	
+	data := ( self getChartData: path chartType: chartType ) associations.
 
 	pie := RSPie new
 		container: canvas;
@@ -149,7 +204,23 @@ ArfMainWin >> drawTreeView: canvas path: path [
 ArfMainWin >> getChartData: path [
 	| response content data |
 	response := (ZnClient new)
-   		url: 'http://localhost:8080/api/fileTypeData?path=', path;
+   		url: 'http://localhost:8080/api/fileTypeData?chartType=createdDate&path=', path;
+   		get;
+   		response.
+content := response contents.
+
+data := (NeoJSONReader on: content readStream)
+   propertyNamesAsSymbols: true;
+   next.
+
+^ data
+]
+
+{ #category : #initialization }
+ArfMainWin >> getChartData: path chartType: chartType [
+	| response content data |
+	response := (ZnClient new)
+   		url: 'http://localhost:8080/api/fileTypeData?chartType=', chartType ,'&createdDate&path=', path;
    		get;
    		response.
 content := response contents.
@@ -224,10 +295,12 @@ ArfMainWin >> initializePresenters [
 	fileTypesBtn := self newRadioButton label: 'File Types'.
 	creationDateBtn  := self newRadioButton label: 'Creation Date'.
 	accessedDateBtn  := self newRadioButton label: 'Accessed Date'.
-	fileTypesBtn associatedRadioButtons: { creationDateBtn . accessedDateBtn }.
-	chartTypeBtns := Dictionary newFrom: { (#fileTypesBtn -> fileTypesBtn ) . 
-	                                   (#creationDateBtn  -> creationDateBtn ) .
-												 (#accessedDateBtn  -> accessedDateBtn ) }.
+	modifiedDateBtn  := self newRadioButton label: 'Modified Date'.
+	fileTypesBtn associatedRadioButtons: { creationDateBtn . accessedDateBtn. modifiedDateBtn }.
+	chartTypeBtns := Dictionary newFrom: { (#fileType -> fileTypesBtn ) . 
+	                                   (#createdDate  -> creationDateBtn ) .
+												 (#accessedDate  -> accessedDateBtn ) .
+												 (#modifiedDate -> modifiedDateBtn )}.
 	showBtn action: [ self showChart ] 
 ]
 
@@ -281,14 +354,15 @@ ArfMainWin >> renderChart: canvas [
 
 { #category : #'canvas drawing' }
 ArfMainWin >> showChart [
-	| str enteredPath |
+	| str chartType enteredPath |
 	str := ( chartBtns   associations detect: [ :each | each value state ]) key.
+	chartType := ( chartTypeBtns   associations detect: [ :each | each value state ]) key.
 	enteredPath := pathInput text.
-	"self inform: ( 'Entered path: ', enteredPath )."
+	self inform: ( 'Entered path: ', chartType  ).
 
 	str = 'treeViewBtn' ifTrue: [    chart script: [ :canvas | 
 		self drawTreeView: canvas path: enteredPath]] .
-	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas path: enteredPath ]].
-	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas path: enteredPath ]]
+	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas path: enteredPath chartType: chartType]].
+	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas path: enteredPath chartType: chartType]]
 
 ]
