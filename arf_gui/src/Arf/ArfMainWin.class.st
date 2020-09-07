@@ -63,8 +63,8 @@ ArfMainWin >> drawPieChart: canvas [
 
 { #category : #'canvas drawing' }
 ArfMainWin >> drawTreeView: canvas [ 
-	"TODO"
-	"Demo tree"
+	"TODO Delete this"
+
 	| shapes demoFile |
 	demoFile := ArfFile new 
 						name: 'Ana';
@@ -106,11 +106,55 @@ ArfMainWin >> drawTreeView: canvas [
 	canvas @ RSCanvasController.
 ]
 
+{ #category : #'canvas drawing' }
+ArfMainWin >> drawTreeView: canvas path: path [
+
+	| shapes tree createShape |
+   	tree := self getTree: 'http://localhost:8080/api/fileTree?path=', path .
+
+	canvas color: '1ced1cccc'.
+
+	createShape := [ :node | 
+		| ellipse group label|
+		ellipse := RSEllipse new 
+			model: node;
+		   color:  (Color red alpha: 0.5);
+		   size: 10;
+		   draggable;
+			yourself.
+		group := RSGroup new. 
+		label := RSLabel new 	
+			text: node element name; 
+			fontSize: 2;
+			yourself.
+		group add: label;
+				add: ellipse.
+	  	RSVerticalLineLayout new alignCenter on: group.
+		RSComposite new
+			shapes: group;
+			model: node;
+			draggable;
+			yourself .]. 
+		 
+	shapes := tree asList collect: [ :node | 
+		createShape value: node ]. 
+
+	canvas addAll: shapes.
+	RSEdgeBuilder line
+		canvas: canvas;
+		objects: tree asList; 
+		connectToAll: #children.
+	canvas edges pushBack.
+	RSTreeLayout on: shapes.
+	canvas @ RSCanvasController.
+
+]
+
 { #category : #initialization }
 ArfMainWin >> getDemo [
 	| response content file |
 	response := (ZnClient new)
-   		url: 'http://localhost:8080';
+   		url: 'http://localhost:8080/api/fileTree?path=C:\Users\anaam\go\src\github.com\AnaMijailovic\NTP\arf\cmd\root.go';
    		get;
    		response.
 content := response contents.
@@ -119,8 +163,33 @@ file := (NeoJSONReader on: content readStream)
    mapInstVarsFor: ArfFile;
    nextAs: ArfFile.
 
-"^ self inform: file name"
-^ self inform: content
+^ self inform: file name
+"^ self inform: content"
+]
+
+{ #category : #initialization }
+ArfMainWin >> getTree: url [
+	| response content tree |
+	response := (ZnClient new)
+   		url: url;
+   		get;
+   		response.
+content := response contents.
+
+"Convert JSON to ArfTree object"
+tree := (NeoJSONReader on: content readStream)
+   mapInstVarsFor: ArfTreeNode;
+   mapInstVarsFor: ArfFile;
+   for: ArfTree do: [ :mapping | 
+      (mapping mapInstVar: #root ) valueSchema: ArfTreeNode  ];
+   for: ArfTreeNode do: [ :mapping | 
+      (mapping mapInstVar: #element ) valueSchema: ArfFile .
+      (mapping mapInstVar: #children ) valueSchema: #ArrayOfTreeNodes ];
+   for: #ArrayOfTreeNodes
+      customDo: [ :mapping | mapping listOfElementSchema: ArfTreeNode ];
+   nextAs: ArfTree.
+
+^ tree
 ]
 
 { #category : #initialization }
@@ -205,9 +274,10 @@ ArfMainWin >> showChart [
 	| str enteredPath |
 	str := ( chartBtns   associations detect: [ :each | each value state ]) key.
 	enteredPath := pathInput text.
-	self inform: ( 'Entered path: ', enteredPath ).
+	"self inform: ( 'Entered path: ', enteredPath )."
+
 	str = 'treeViewBtn' ifTrue: [    chart script: [ :canvas | 
-		self drawTreeView: canvas ]] .
+		self drawTreeView: canvas path: enteredPath]] .
 	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas. ]].
 	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas. ]]
 
