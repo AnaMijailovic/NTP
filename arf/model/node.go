@@ -2,7 +2,7 @@ package model
 
 type Node struct {
 	Element interface {} `json:"element"`
-	Parent *Node         `json:"parent"`
+	Parent *Node         `json:"-"`
 	Children []*Node     `json:"children"`
 }
 

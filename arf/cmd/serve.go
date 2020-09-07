@@ -16,11 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/spf13/cobra"
+	"github.com/AnaMijailovic/NTP/arf/net"
 )
 
 // serveCmd represents the serve command
@@ -35,7 +33,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("serve called")
-		serve()
+		net.Serve()
 	},
 }
 
@@ -51,27 +49,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// TODO Remove this
-func serve() {
-
-	http.HandleFunc("/", HelloServer)
-
-	fmt.Println("Starting server ...")
-	http.ListenAndServe(":8080", nil)
-
-}
-
-func HelloServer(w http.ResponseWriter, r *http.Request) {
-
-	v := model.File{Name: "name", FullPath: "fullPath", IsDir: false, Size: 54, FileType: "some type"}
-	// out, _ := json.Marshal(&model.File{Name: "some name"})
-	// fmt.Println(string(out))
-
-	var err = json.NewEncoder(w).Encode(v)
-
-	if err != nil {
-		fmt.Println("Some error happened: ", err)
-	}
 }

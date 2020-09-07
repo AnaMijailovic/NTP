@@ -17,8 +17,9 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
+	"encoding/json"
 )
 
 // deleteCmd represents the delete command
@@ -33,6 +34,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("delete called")
+		tree := service.CreateTree("./cmd")
+		//fmt.Println(tree)
+		out, _ := json.Marshal(tree)
+		fmt.Println(string(out))
 	},
 }
 
