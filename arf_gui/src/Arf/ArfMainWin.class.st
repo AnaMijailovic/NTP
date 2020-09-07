@@ -13,7 +13,6 @@ Class {
 		'creationDateBtn',
 		'accessedDateBtn',
 		'showBtn',
-		'pie',
 		'chart'
 	],
 	#category : #Arf
@@ -50,60 +49,56 @@ ArfMainWin class >> defaultSpec [
 ]
 
 { #category : #'canvas drawing' }
-ArfMainWin >> drawBarChart: canvas [ 
-	"TODO"
-	canvas color: 'ed1cc0'.
+ArfMainWin >> drawBarChart: canvas path: path [
+
+	| bar data xData yData|
+	
+	data := self getChartData: path.
+	xData := data values.
+	"xData := xData collect: [ :each | each asString  ]."
+	yData := data values.
+	self inform: yData.
+	bar := RSChart new
+			container: canvas.
+	bar addPlot: (RSBarPlot new x: xData y: yData).
+	
+	bar addDecoration: (RSVerticalTick new 
+		numberOfTicks: 5;
+		asFloat).
+	bar xlabel: 'Type'.
+	bar ylabel: 'Size'.
+	
+	bar renderIn: canvas.
+	bar canvas when: RSExtentChangedEvent do: [ bar canvas zoomToFit ].
 ]
 
 { #category : #'canvas drawing' }
-ArfMainWin >> drawPieChart: canvas [ 
-	"TODO"
-	canvas color: '1ceaed'.
-]
+ArfMainWin >> drawPieChart: canvas path: path [
 
-{ #category : #'canvas drawing' }
-ArfMainWin >> drawTreeView: canvas [ 
-	"TODO Delete this"
+	| pie pieLabel data |
+	
+	data := ( self getChartData: path ) associations.
 
-	| shapes demoFile |
-	demoFile := ArfFile new 
-						name: 'Ana';
-						size: 22.
-	canvas color: '1ced1cccc'.
-	shapes := self class withAllSubclasses collect: [ :cls |
-		| group label s methods|
-		group := RSGroup new. 
-		methods := cls methods collect: [ :met|
-			RSBox new
-				model: met;
-				popupText: #selector;
-				size: met linesOfCode;
-				yourself ].
-		RSGridLayout on: methods.
-		s := RSComposite new
-			color: (Color lightGray alpha: 0.4);
-			shapes: methods;
-			yourself.
-		s extent: s extent + 10. 
-		label := RSLabel new 
-			text: cls;
-			yourself.
-		group add: label; add: s.
-		RSVerticalLineLayout new alignCenter on: group.
-		RSComposite new
-			shapes: group;
-			model: cls;
-			draggable;
-			popup;
-			yourself  ].
-	canvas addAll: shapes.
-	RSEdgeBuilder line
-		canvas: canvas;
-		objects: self class withAllSubclasses; 
-		connectFrom: #superclass.
-	canvas edges pushBack.
-	RSTreeLayout on: shapes.
-	canvas @ RSCanvasController.
+	pie := RSPie new
+		container: canvas;
+		objects: data;
+		slice: #value.
+		
+	pie sliceShape
+		segmentSpacing: 0;
+		externalRadius: 100;
+		innerRadius: 50.
+	pie sliceColor: NSScale category20.
+	
+	pieLabel := RSPieLabeled new.
+	pieLabel labelShape fontSize: 4.
+	pieLabel labelText: [ :obj | 
+		obj key, '  (', (obj value * 100 / pie totalSum) rounded asString, ' % )'].
+	
+	pie build.
+	pie canvas when: RSExtentChangedEvent do: [ pie canvas zoomToFit ].
+	pie shapes @ pieLabel.
+
 ]
 
 { #category : #'canvas drawing' }
@@ -148,6 +143,22 @@ ArfMainWin >> drawTreeView: canvas path: path [
 	RSTreeLayout on: shapes.
 	canvas @ RSCanvasController.
 
+]
+
+{ #category : #initialization }
+ArfMainWin >> getChartData: path [
+	| response content data |
+	response := (ZnClient new)
+   		url: 'http://localhost:8080/api/fileTypeData?path=', path;
+   		get;
+   		response.
+content := response contents.
+
+data := (NeoJSONReader on: content readStream)
+   propertyNamesAsSymbols: true;
+   next.
+
+^ data
 ]
 
 { #category : #initialization }
@@ -199,7 +210,6 @@ ArfMainWin >> initializePresenters [
 	showBtn := self newButton label: 'Show'.
 	
 	chart := self instantiate: SpRoassalPresenter.
-	pie := self instantiate: SpRoassalPresenter.
    chart script: [ :canvas | self renderChart: canvas].
 
 		
@@ -278,7 +288,7 @@ ArfMainWin >> showChart [
 
 	str = 'treeViewBtn' ifTrue: [    chart script: [ :canvas | 
 		self drawTreeView: canvas path: enteredPath]] .
-	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas. ]].
-	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas. ]]
+	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas path: enteredPath ]].
+	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas path: enteredPath ]]
 
 ]
