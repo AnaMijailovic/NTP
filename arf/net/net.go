@@ -10,6 +10,7 @@ import (
 func Serve() {
 
 	http.HandleFunc("/api/fileTree", GetFileTree)
+	http.HandleFunc("/api/fileTypeData", GetTypeChartData)
 
 	fmt.Println("Starting server ...")
 	http.ListenAndServe(":8080", nil)
@@ -28,6 +29,18 @@ func GetFileTree(w http.ResponseWriter, r *http.Request) {
 	tree := service.CreateTree(path)
 
 	var err = json.NewEncoder(w).Encode(tree)
+
+	if err != nil {
+		fmt.Println("Some error happened: ", err)
+	}
+}
+
+func GetTypeChartData(w http.ResponseWriter, r *http.Request) {
+	keys, _ := r.URL.Query()["path"]
+	path := keys[0]
+
+	data := service.FileTypeChartData(path)
+	var err = json.NewEncoder(w).Encode(data)
 
 	if err != nil {
 		fmt.Println("Some error happened: ", err)

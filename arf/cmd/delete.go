@@ -34,9 +34,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("delete called")
-		tree := service.CreateTree("./cmd")
+		//tree := service.CreateTree("./cmd")
+		data := service.FileTypeChartData("./cmd")
 		//fmt.Println(tree)
-		out, _ := json.Marshal(tree)
+		out, _ := json.Marshal(data)
 		fmt.Println(string(out))
 	},
 }
