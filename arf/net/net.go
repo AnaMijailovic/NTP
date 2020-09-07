@@ -39,7 +39,11 @@ func GetTypeChartData(w http.ResponseWriter, r *http.Request) {
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
 
-	data := service.FileTypeChartData(path)
+	// TODO Get type from URL
+	keys, _ = r.URL.Query()["chartType"]
+	chartType := keys[0]
+
+	data := service.FileChartData(path, chartType)
 	var err = json.NewEncoder(w).Encode(data)
 
 	if err != nil {

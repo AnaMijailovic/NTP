@@ -35,7 +35,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("delete called")
 		//tree := service.CreateTree("./cmd")
-		data := service.FileTypeChartData("./cmd")
+		data := service.FileChartData("./cmd", "fileTypes")
 		//fmt.Println(tree)
 		out, _ := json.Marshal(data)
 		fmt.Println(string(out))

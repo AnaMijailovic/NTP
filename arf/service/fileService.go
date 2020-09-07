@@ -8,9 +8,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 type WalkFunc func(path string, info os.FileInfo, err error) error
+type GetLabelFunc func(filePath string) (string, error)
 
 func CreateTree(root string) model.Tree {
 	root, _ = filepath.Abs(root)
@@ -32,8 +34,22 @@ func CreateTree(root string) model.Tree {
 	return tree
 }
 
-func FileTypeChartData(root string) map[string]int64 {
+func getLabelFunc(chartType string) GetLabelFunc {
 
+	if chartType == "fileType"{
+		return getFileContentType
+	} else if chartType == "createdDate" {
+		return getCreatedDateLabel
+	} else if chartType == "modifiedDate" {
+		return getModifiedDateLabel
+	}else { // accessed date
+		return getAccessedDateLabel
+	}
+}
+
+func FileChartData(root string, chartType string) map[string]int64 {
+
+	getLabelFunc := getLabelFunc(chartType)
 	// closure
 	fileTypesDict := make(map[string]int64)
 
@@ -47,7 +63,7 @@ func FileTypeChartData(root string) map[string]int64 {
 			return err
 		}
 
-		fileType, _ := getFileContentType(path)
+		fileType, _ := getLabelFunc(path)
 		size, ok := fileTypesDict[fileType]
 		if ok {
 			fileTypesDict[fileType] = size + info.Size()
@@ -168,4 +184,40 @@ func getFileContentType(filePath string) (string, error) {
 	contentType := http.DetectContentType(buffer)
 	// fmt.Println(contentType)
 	return contentType, nil
+}
+
+func getCreatedDateLabel(filePath string) (string, error) {
+	timeStat, err := times.Stat(filePath)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	createdYear := timeStat.BirthTime().Year()
+
+	return strconv.Itoa(createdYear), nil
+}
+
+func getModifiedDateLabel(filePath string) (string, error) {
+	timeStat, err := times.Stat(filePath)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	modifiedYear := timeStat.ModTime().Year()
+
+	return strconv.Itoa(modifiedYear), nil
+}
+
+func getAccessedDateLabel(filePath string) (string, error) {
+	timeStat, err := times.Stat(filePath)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	accessedYear := timeStat.ModTime().Year()
+
+	return strconv.Itoa(accessedYear), nil
 }
