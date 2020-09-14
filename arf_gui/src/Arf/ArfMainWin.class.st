@@ -330,11 +330,12 @@ ArfMainWin >> mainMenu [
 					action: [ self getDemo ]];
 			addItem: [ :item |
 				item 
-					name: 'Reorganize'];
+					name: 'Reorganize';
+				   action: [ ArfReorganizePresenter new openWithSpec ]];
 			addItem: [ :item | 
 				item
 					name: 'Rename';
-					action: [ self openRoassal ]];
+					action: [ ArfRenamePresenter new openWithSpec ]];
 			addItem: [ :item |
 				item
 					name: 'Delete';
