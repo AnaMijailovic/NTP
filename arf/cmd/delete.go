@@ -14,6 +14,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -43,7 +44,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Get flag values
-		// recursiveFlag, _ := cmd.Flags().GetBool("recursive")
+		recursiveFlag, _ := cmd.Flags().GetBool("recursive")
 		emptyFlag, _ := cmd.Flags().GetBool("empty")
 		createdBeforeFlag, _ := cmd.Flags().GetString("createdBefore")
 		notAccessedAfterFlag, _ := cmd.Flags().GetString("notAccessedAfter")
@@ -58,7 +59,7 @@ to quickly create a Cobra application.`,
 		}
 
 
-		// service.DeleteFiles(args[0], recursiveFlag, emptyFlag, cbTime, naTime )
+		service.DeleteFiles(args[0], recursiveFlag, emptyFlag, cbTime, naTime )
 
 	},
 }
@@ -80,9 +81,9 @@ func convertStringToDate(dateStr string, dateName string) time.Time {
 	var date time.Time
 
 	if dateStr != "" {
-		date, err = time.Parse("01-02-2006", dateStr)
+		date, err = time.Parse("02-01-2006", dateStr)
 	}else {
-		date, err = time.Parse("01-02-2006", "01-01-0001")
+		date, err = time.Parse("02-01-2006", "01-01-0001")
 	}
 
 	if err != nil {

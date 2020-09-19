@@ -9,12 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type WalkFunc func(path string, info os.FileInfo, err error) error
 type GetLabelFunc func(filePath string) (string, error)
-type GenerateFolderNameFunc func(interface{}) string
 
 
 // *************************************************************************
@@ -266,9 +266,84 @@ func postorderDelete(node *model.Node, empty bool, createdBefore time.Time, notA
 // *************************************************************************
 //								REORGANIZE
 // *************************************************************************
-func generateFolderName(fileType bool, fileSize int64, createdDate string) {
 
-}
 func ReorganizeFiles(src string, dest string, recursive bool, fileType bool, fileSize int64, createdDate string) {
 
+
+	Walk(src, recursive, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		newFolderName := generateFolderName(path, fileType, fileSize, createdDate)
+		newFolderName = strings.Replace(newFolderName, "/", "_", -1)
+
+		newFolderPath := dest + string(os.PathSeparator) + newFolderName
+		fmt.Println("New folder path: ", newFolderPath)
+
+		// check if directory already exists
+		if _, err := os.Open(newFolderPath); err != nil {
+			err := os.Mkdir(newFolderPath, 0755)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		// Move file
+		err = os.Rename(path, newFolderPath + string(os.PathSeparator) + info.Name())
+
+		// TODO Write recovery data to a file
+
+		return nil
+	})
+
+}
+
+func generateFolderName(path string, fileType bool, fileSize int64, createdDate string) string {
+	if fileType {
+		return generateFolderNameByType(path)
+	} else if fileSize != 0 {
+		return generateFolderNameBySize(path, fileSize)
+	} else {
+		return generateFolderNameByDate(path, createdDate)
+	}
+}
+
+func generateFolderNameByType(path string) string {
+	fileType, _ := getFileContentType(path)
+	return fileType
+}
+
+func generateFolderNameBySize(path string, step int64) string {
+	var label string
+	stat, _ := os.Stat(path)
+	size := stat.Size()
+
+	groupNum := size / step
+	fmt.Println("Size: ", size)
+	fmt.Println("GroupNum: ", groupNum)
+
+	if groupNum == 0 {
+		label = strconv.FormatInt(step*groupNum, 10) + "-" + strconv.FormatInt(step*groupNum + step, 10)
+	} else {
+		label = strconv.FormatInt(step*groupNum + 1, 10) + "-" + strconv.FormatInt(step*groupNum + step, 10)
+	}
+
+	return label
+}
+
+func generateFolderNameByDate(path string, dateType string) string {
+
+	timeStat, _ := times.Stat(path)
+	var folderName string
+
+	if dateType == "d" {
+		folderName = timeStat.BirthTime().Format("02-01-2006")
+	} else if dateType == "m" {
+		folderName = timeStat.BirthTime().Format("01-2006")
+	} else { // year
+		folderName = timeStat.BirthTime().Format("2006")
+	}
+
+	return folderName
 }

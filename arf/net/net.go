@@ -13,7 +13,7 @@ func Serve() {
 
 	http.HandleFunc("/api/fileTree", GetFileTree)
 	http.HandleFunc("/api/fileTypeData", GetTypeChartData)
-	http.HandleFunc("/api/delete", DeleteFiles)
+	http.HandleFunc("/api/deleteFiles", DeleteFiles)
 
 	fmt.Println("Starting server ...")
 	http.ListenAndServe(":8080", nil)
@@ -54,12 +54,6 @@ func GetTypeChartData(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteFiles(w http.ResponseWriter, r *http.Request) {
-	/*
-		queryAt: 'path' put: enteredPath ;
-		queryAt: 'recursive' put: recursive;
-		queryAt: 'empty' put: empty;
-		queryAt: 'createdBefore' put: createdBefore ;
-		queryAt: 'notAccessedAfter' put: notAccessedAfter;*/
 
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
@@ -71,17 +65,19 @@ func DeleteFiles(w http.ResponseWriter, r *http.Request) {
 	empty, _ := strconv.ParseBool(keys[0])
 
 	keys, _ = r.URL.Query()["createdBefore"]
-	createdBefore, _ := time.Parse("01-02-2006", keys[0])
+	fmt.Println("Created: ", keys[0])
+	createdBefore, _ := time.Parse("02-Jan-2006", keys[0])
 
 	keys, _ = r.URL.Query()["notAccessedAfter"]
-	notAccessedAfter, _ := time.Parse("01-02-2006", keys[0])
+	fmt.Println("Accessed: ", keys[0])
+	notAccessedAfter, _ := time.Parse("02-Jan-2006", keys[0])
 
 	fmt.Println("Path: ", path)
 	fmt.Println("Recursive: ", recursive)
 	fmt.Println("Empty: ", empty)
 	fmt.Println("CB: ", createdBefore)
 	fmt.Println("NA: ", notAccessedAfter)
-	// service.DeleteFiles(path, recursive, empty, createdBefore, notAccessedAfter)
+	service.DeleteFiles(path, recursive, empty, createdBefore, notAccessedAfter)
 
 	json.NewEncoder(w).Encode("Deleted")
 
