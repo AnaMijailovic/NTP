@@ -1,12 +1,9 @@
 /*
 Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,10 +13,11 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"github.com/AnaMijailovic/NTP/arf/service"
+	"errors"
 	"github.com/spf13/cobra"
-	"encoding/json"
+	"log"
+	"os"
+	"time"
 )
 
 // deleteCmd represents the delete command
@@ -28,30 +26,73 @@ var deleteCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
-
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("you must provide path argument")
+		}
+
+		// Check if path is valid
+		if _, err := os.Open(args[0]); err != nil {
+			return err
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
-		//tree := service.CreateTree("./cmd")
-		data := service.FileChartData("./cmd", "fileTypes")
-		//fmt.Println(tree)
-		out, _ := json.Marshal(data)
-		fmt.Println(string(out))
+
+		// Get flag values
+		// recursiveFlag, _ := cmd.Flags().GetBool("recursive")
+		emptyFlag, _ := cmd.Flags().GetBool("empty")
+		createdBeforeFlag, _ := cmd.Flags().GetString("createdBefore")
+		notAccessedAfterFlag, _ := cmd.Flags().GetString("notAccessedAfter")
+
+		// Convert strings to dates
+		cbTime := convertStringToDate(createdBeforeFlag, "createdBefore")
+		naTime := convertStringToDate(notAccessedAfterFlag, "notAccessedAfter")
+
+		// Check if criteria is provided
+		if !emptyFlag && cbTime.IsZero() && naTime.IsZero() {
+			log.Fatal("ERROR: You must provide a deletion criteria")
+		}
+
+
+		// service.DeleteFiles(args[0], recursiveFlag, emptyFlag, cbTime, naTime )
+
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
-	// Here you will define your flags and configuration settings.
+	deleteCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
+	deleteCmd.Flags().BoolP("empty", "e", false, "Delete empty files")
+	deleteCmd.Flags().StringP("createdBefore", "b", "",
+		"Delete files created before the given date")
+	deleteCmd.Flags().StringP("notAccessedAfter", "a", "",
+		"Delete files not accessed after the given date")
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
+func convertStringToDate(dateStr string, dateName string) time.Time {
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	var err error
+	var date time.Time
+
+	if dateStr != "" {
+		date, err = time.Parse("01-02-2006", dateStr)
+	}else {
+		date, err = time.Parse("01-02-2006", "01-01-0001")
+	}
+
+	if err != nil {
+		if _, ok := err.(*time.ParseError); ok {
+			log.Fatal("ERROR: " + dateName + " date format is not valid: ", err)
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	return date
+
 }
