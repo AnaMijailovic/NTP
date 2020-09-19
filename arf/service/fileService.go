@@ -1,10 +1,12 @@
 package service
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"gopkg.in/djherbis/times.v1"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -268,7 +270,9 @@ func postorderDelete(node *model.Node, empty bool, createdBefore time.Time, notA
 // *************************************************************************
 
 func ReorganizeFiles(src string, dest string, recursive bool, fileType bool, fileSize int64, createdDate string) {
-
+	recoveryFilePath := dest + string(os.PathSeparator) + "arfRecover.txt"
+	// TODO Something better here?
+	os.Remove(recoveryFilePath)
 
 	Walk(src, recursive, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -290,13 +294,28 @@ func ReorganizeFiles(src string, dest string, recursive bool, fileType bool, fil
 		}
 
 		// Move file
-		err = os.Rename(path, newFolderPath + string(os.PathSeparator) + info.Name())
+		newFilePath :=  newFolderPath + string(os.PathSeparator) + info.Name()
+		err = os.Rename(path,newFilePath)
 
-		// TODO Write recovery data to a file
+		writeRecoveryData(recoveryFilePath, path, newFilePath)
 
 		return nil
 	})
 
+}
+
+func writeRecoveryData(recoveryFilePath string, src string, dest string) {
+
+	// If the file doesn't exist, create it, or append to the file
+	recoveryFile, err := os.OpenFile(recoveryFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer recoveryFile.Close()
+
+	recoveryFile.WriteString(src + "," + dest + "\n")
 }
 
 func generateFolderName(path string, fileType bool, fileSize int64, createdDate string) string {
@@ -320,8 +339,6 @@ func generateFolderNameBySize(path string, step int64) string {
 	size := stat.Size()
 
 	groupNum := size / step
-	fmt.Println("Size: ", size)
-	fmt.Println("GroupNum: ", groupNum)
 
 	if groupNum == 0 {
 		label = strconv.FormatInt(step*groupNum, 10) + "-" + strconv.FormatInt(step*groupNum + step, 10)
@@ -346,4 +363,54 @@ func generateFolderNameByDate(path string, dateType string) string {
 	}
 
 	return folderName
+}
+
+// *************************************************************************
+//								RECOVER
+// *************************************************************************
+
+func Recover(recoveryFilePath string) {
+
+	file, err := os.Open(recoveryFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+
+		// Split next line
+		paths := strings.Split(scanner.Text(), ",")
+		src, dest := paths[0], paths[1]
+
+		moveFile(dest, src)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Delete recoveryFile
+	os.Remove(recoveryFilePath)
+}
+
+func moveFile(src string, dest string) {
+
+	dirPath := filepath.Dir(dest)
+
+	if _, err := os.Open(dirPath); err != nil {
+		err := os.Mkdir(dirPath, 0755)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	// Move file
+	err := os.Rename(src, dest)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }

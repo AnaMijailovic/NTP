@@ -24,6 +24,7 @@ import (
 
 // reorganizeCmd represents the reorganize command
 var reorganizeCmd = &cobra.Command {
+
 	Use:   "reorganize",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
