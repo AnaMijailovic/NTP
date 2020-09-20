@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"os"
@@ -39,16 +38,18 @@ to quickly create a Cobra application.`,
 		}
 
 		// Check if path are valid
-		if _, err := os.Open(args[0]); err != nil {
+		if file, err := os.Open(args[0]); err != nil {
 			return err
+		}else {
+			file.Close()
 		}
 
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("recover called")
-		fmt.Println("RecoverDest: ", args[0])
+
 		service.Recover(args[0])
+
 	},
 }
 

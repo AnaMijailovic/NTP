@@ -39,8 +39,10 @@ to quickly create a Cobra application.`,
 
 		// Check if paths are valid
 		for _, path := range args {
-			if _, err := os.Open(path); err != nil {
+			if file, err := os.Open(path); err != nil {
 				return err
+			}else {
+				file.Close()
 			}
 		}
 

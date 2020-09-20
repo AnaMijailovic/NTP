@@ -14,6 +14,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/AnaMijailovic/NTP/arf/model"
+	"github.com/AnaMijailovic/NTP/arf/service"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -27,21 +31,58 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	Args: func(cmd *cobra.Command, args []string) error {
+
+		// Check if path is valid (if provided)
+		if len(args) > 0{
+			if file, err := os.Open(args[0]); err != nil {
+				return err
+			}else {
+				file.Close()
+			}
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("rename called")
+		var path string
+		var err error
+
+		if len(args) > 0 {
+			path = args[0]
+		}else {
+			path, err = os.Getwd()
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
+		fmt.Println(path)
+
+		// Get flag values
+		recursiveFlag, _ := cmd.Flags().GetBool("recursive")
+		randomFlag, _ := cmd.Flags().GetBool("random")
+		removeFlag, _ := cmd.Flags().GetString("remove")
+		replaceWithFlag, _ := cmd.Flags().GetString("replaceWith")
+
+		renameData := model.RenameData{path, recursiveFlag, randomFlag, removeFlag,
+			replaceWithFlag }
+
+		fmt.Println(renameData)
+		service.Rename(&renameData)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(renameCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// renameCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// renameCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	renameCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
+	renameCmd.Flags().BoolP("random", "n", false, "Generate random new names")
+	renameCmd.Flags().StringP("remove", "m", "",
+		"Remove a given part of the file name")
+	renameCmd.Flags().StringP("replace", "c", "",
+		"Replace a given part of the file name")
+	renameCmd.Flags().StringP("replaceWith", "w", "",
+		"Replace with a given part of the file name")
 }

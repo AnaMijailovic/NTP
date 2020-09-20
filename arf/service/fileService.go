@@ -2,6 +2,8 @@ package service
 
 import (
 	"bufio"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"gopkg.in/djherbis/times.v1"
@@ -336,7 +338,7 @@ func generateFolderNameByType(path string) string {
 func generateFolderNameBySize(path string, step int64) string {
 	var label string
 	stat, _ := os.Stat(path)
-	size := stat.Size()
+	size := stat.Size() / 1000000 // MB
 
 	groupNum := size / step
 
@@ -366,6 +368,70 @@ func generateFolderNameByDate(path string, dateType string) string {
 }
 
 // *************************************************************************
+//								RENAME
+// *************************************************************************
+
+func Rename(renameData *model.RenameData) {
+	recoveryFilePath := renameData.Path + string(os.PathSeparator) + "arfRecover.txt"
+	// TODO Something better here?
+	os.Remove(recoveryFilePath)
+
+	Walk(renameData.Path, renameData.Recursive, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		newFileName := generateNewFileName(path, renameData)
+
+		newFilePath := renameData.Path + string(os.PathSeparator) + newFileName
+
+		fmt.Println("New file path: ", newFilePath)
+
+		// Rename a file
+		err = os.Rename(path, newFilePath)
+
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		writeRecoveryData(recoveryFilePath, path, newFilePath)
+
+		return nil
+	})
+}
+
+func generateNewFileName(oldFilePath string, renameData *model.RenameData) string {
+	fileName := filepath.Base(oldFilePath)
+	if renameData.Random {
+		randomStr, _ := GenerateRandomString(12)
+		extension := filepath.Ext(oldFilePath)
+		randomStr = randomStr + extension
+		return  randomStr
+	} else if renameData.Remove != "" {
+		return strings.ReplaceAll(fileName, renameData.Remove, renameData.ReplaceWith)
+	}
+
+	//TODO other cases
+	return "TODO..."
+}
+
+func GenerateRandomBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func GenerateRandomString(s int) (string, error) {
+	b, err := GenerateRandomBytes(s)
+	return base64.URLEncoding.EncodeToString(b), err
+}
+
+// *************************************************************************
 //								RECOVER
 // *************************************************************************
 
@@ -392,7 +458,12 @@ func Recover(recoveryFilePath string) {
 	}
 
 	// Delete recoveryFile
-	os.Remove(recoveryFilePath)
+	file.Close()
+	err = os.Remove(recoveryFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func moveFile(src string, dest string) {
