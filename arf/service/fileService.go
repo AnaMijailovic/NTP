@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type WalkFunc func(path string, info os.FileInfo, err error) error
@@ -25,7 +24,7 @@ type GetLabelFunc func(filePath string) (string, error)
 //							   CREATE TREE
 // *************************************************************************
 
-func CreateTree(root string) model.Tree {
+func CreateTree(root string, recursive bool) model.Tree {
 	root, _ = filepath.Abs(root)
 	stat, err := os.Stat(root)
 	if err != nil {
@@ -37,14 +36,15 @@ func CreateTree(root string) model.Tree {
 	tree := model.Tree{Root: &rootNode}
 
 	if stat.IsDir() {
-		rootNode.Children = getChildren(root)
+		rootNode.Children = getChildren(root, recursive)
 	} else {
 		rootNode.Children = make([]*model.Node, 0)
 	}
 
 	return tree
 }
-func getChildren(parentPath string) []*model.Node {
+
+func getChildren(parentPath string, recursive bool) []*model.Node {
 	// ReadDir reads the directory named by dirname
 	// and returns a list of directory entries sorted by filename.
 	children, err := ioutil.ReadDir(parentPath)
@@ -67,8 +67,8 @@ func getChildren(parentPath string) []*model.Node {
 		childNode := createFileTreeNode(absPath, stat)
 		childrenNodes = append(childrenNodes, &childNode)
 
-		if stat.IsDir()  {
-			childNode.Children = getChildren(absPath) // parallel
+		if stat.IsDir()  && recursive {
+			childNode.Children = getChildren(absPath, recursive) // parallel
 		} else {
 			childNode.Children = make([]*model.Node, 0)
 		}
@@ -242,27 +242,30 @@ func Walk(root string, recursive bool, walkFn WalkFunc) error {
 //								DELETE
 // *************************************************************************
 
-func DeleteFiles(path string, recursive bool, empty bool, createdBefore time.Time, notAccessedAfter time.Time) {
-	tree := CreateTree(path)
+func DeleteFiles(deleteData *model.DeleteData) {
+	tree := CreateTree(deleteData.Path, deleteData.Recursive)
 
-	postorderDelete(tree.Root, empty, createdBefore, notAccessedAfter)
+	postorderDelete(tree.Root, deleteData)
 
 }
 
-func postorderDelete(node *model.Node, empty bool, createdBefore time.Time, notAccessedAfter time.Time ) {
+func postorderDelete(node *model.Node, deleteData *model.DeleteData ) {
 
 	for _, file := range node.Children {
-		postorderDelete(file, empty, createdBefore, notAccessedAfter)
+		postorderDelete(file, deleteData)
 	}
 
 	file := node.Element.(model.File)
 	stat, _ := os.Stat(file.FullPath)
 	size := stat.Size()
 
-	if ( empty && size == 0 ) ||
-		(createdBefore.After(file.Created) && (!file.IsDir || file.Size == 0)) ||
-		(notAccessedAfter.After(file.Accessed) && (!file.IsDir || file.Size == 0)){
-		os.Remove(file.FullPath)
+	if ( deleteData.Empty && size == 0 ) ||
+		(deleteData.CreatedBefore.After(file.Created) && (!file.IsDir || file.Size == 0)) ||
+		(deleteData.NotAccessedAfter.After(file.Accessed) && (!file.IsDir || file.Size == 0)){
+		err := os.Remove(file.FullPath)
+		if err != nil {
+			fmt.Println(err)
+		}
 		fmt.Println("Removed: ", file.FullPath)
 	}
 }
@@ -271,20 +274,20 @@ func postorderDelete(node *model.Node, empty bool, createdBefore time.Time, notA
 //								REORGANIZE
 // *************************************************************************
 
-func ReorganizeFiles(src string, dest string, recursive bool, fileType bool, fileSize int64, createdDate string) {
-	recoveryFilePath := dest + string(os.PathSeparator) + "arfRecover.txt"
+func ReorganizeFiles(reorganizeData *model.ReorganizeData) {
+	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
 	// TODO Something better here?
 	os.Remove(recoveryFilePath)
 
-	Walk(src, recursive, func(path string, info os.FileInfo, err error) error {
+	Walk(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 
-		newFolderName := generateFolderName(path, fileType, fileSize, createdDate)
+		newFolderName := generateFolderName(path, reorganizeData)
 		newFolderName = strings.Replace(newFolderName, "/", "_", -1)
 
-		newFolderPath := dest + string(os.PathSeparator) + newFolderName
+		newFolderPath := reorganizeData.Dest + string(os.PathSeparator) + newFolderName
 		fmt.Println("New folder path: ", newFolderPath)
 
 		// check if directory already exists
@@ -320,13 +323,13 @@ func writeRecoveryData(recoveryFilePath string, src string, dest string) {
 	recoveryFile.WriteString(src + "," + dest + "\n")
 }
 
-func generateFolderName(path string, fileType bool, fileSize int64, createdDate string) string {
-	if fileType {
+func generateFolderName(path string, reorganizeData *model.ReorganizeData) string {
+	if reorganizeData.FileType {
 		return generateFolderNameByType(path)
-	} else if fileSize != 0 {
-		return generateFolderNameBySize(path, fileSize)
+	} else if reorganizeData.FileSize != 0 {
+		return generateFolderNameBySize(path, reorganizeData.FileSize)
 	} else {
-		return generateFolderNameByDate(path, createdDate)
+		return generateFolderNameByDate(path, reorganizeData.CreatedDate)
 	}
 }
 
@@ -383,7 +386,7 @@ func Rename(renameData *model.RenameData) {
 
 		newFileName := generateNewFileName(path, renameData)
 
-		newFilePath := renameData.Path + string(os.PathSeparator) + newFileName
+		newFilePath := filepath.Dir(path) + string(os.PathSeparator) + newFileName
 
 		fmt.Println("New file path: ", newFilePath)
 
@@ -402,18 +405,48 @@ func Rename(renameData *model.RenameData) {
 }
 
 func generateNewFileName(oldFilePath string, renameData *model.RenameData) string {
-	fileName := filepath.Base(oldFilePath)
+	oldFileName := filepath.Base(oldFilePath)
 	if renameData.Random {
 		randomStr, _ := GenerateRandomString(12)
 		extension := filepath.Ext(oldFilePath)
 		randomStr = randomStr + extension
 		return  randomStr
 	} else if renameData.Remove != "" {
-		return strings.ReplaceAll(fileName, renameData.Remove, renameData.ReplaceWith)
+		return strings.ReplaceAll(oldFileName, renameData.Remove, renameData.ReplaceWith)
+	} else if renameData.Pattern != "" {
+		newName, _ := parsePatternString(renameData.Pattern, oldFileName )
+		fmt.Println("New name: ", newName)
+		return newName
 	}
 
 	//TODO other cases
 	return "TODO..."
+}
+
+func parsePatternString(patternStr string, oldFileName string) (string, error){
+	// var newName string
+	// Remove extension from file name
+	ext := filepath.Ext(oldFileName)
+	oldFileName = strings.Replace(oldFileName, ext, "", 1)
+
+	for strings.Index(patternStr, "{") != -1 {
+		startIndex := strings.Index(patternStr, "{")
+		endIndex := strings.Index(patternStr, "}")
+		tag := patternStr[startIndex+1 : endIndex]
+
+		fmt.Println("Between: ", tag)
+
+		if tag == "name" {
+			patternStr = strings.Replace(patternStr, patternStr[startIndex:endIndex+1], oldFileName, 1)
+
+		}else if tag == "random" {
+			random, _ := GenerateRandomString(12)
+			patternStr = strings.Replace(patternStr, patternStr[startIndex:endIndex+1], random, 1 )
+		}
+
+	}
+	return patternStr + ext, nil
+
 }
 
 func GenerateRandomBytes(n int) ([]byte, error) {
@@ -435,7 +468,8 @@ func GenerateRandomString(s int) (string, error) {
 //								RECOVER
 // *************************************************************************
 
-func Recover(recoveryFilePath string) {
+func Recover(recoveryFilePath string) []error {
+	errs := make([]error, 0)
 
 	file, err := os.Open(recoveryFilePath)
 	if err != nil {
@@ -450,7 +484,18 @@ func Recover(recoveryFilePath string) {
 		paths := strings.Split(scanner.Text(), ",")
 		src, dest := paths[0], paths[1]
 
-		moveFile(dest, src)
+		// TODO Return all that failed to move
+		err := moveFile(dest, src)
+		if err != nil {
+			errs = append(errs, err)
+		}
+
+		// Delete destination directory if it is empty
+		file,_ := os.Stat(filepath.Dir(dest))
+		if file.Size() == 0 {
+			os.Remove(filepath.Dir(dest))
+		}
+
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -464,16 +509,17 @@ func Recover(recoveryFilePath string) {
 		log.Fatal(err)
 	}
 
+	return errs
 }
 
-func moveFile(src string, dest string) {
+func moveFile(src string, dest string) error {
 
 	dirPath := filepath.Dir(dest)
 
 	if _, err := os.Open(dirPath); err != nil {
 		err := os.Mkdir(dirPath, 0755)
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
 	}
 
@@ -481,7 +527,9 @@ func moveFile(src string, dest string) {
 	err := os.Rename(src, dest)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 
 }

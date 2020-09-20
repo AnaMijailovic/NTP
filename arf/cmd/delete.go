@@ -14,6 +14,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"log"
@@ -36,8 +37,10 @@ to quickly create a Cobra application.`,
 		}
 
 		// Check if path is valid
-		if _, err := os.Open(args[0]); err != nil {
+		if file, err := os.Open(args[0]); err != nil {
 			return err
+		} else {
+			file.Close()
 		}
 		return nil
 	},
@@ -58,8 +61,9 @@ to quickly create a Cobra application.`,
 			log.Fatal("ERROR: You must provide a deletion criteria")
 		}
 
-
-		service.DeleteFiles(args[0], recursiveFlag, emptyFlag, cbTime, naTime )
+		deleteData := model.DeleteData{args[0], recursiveFlag, emptyFlag, cbTime,
+			naTime}
+		service.DeleteFiles( &deleteData )
 
 	},
 }

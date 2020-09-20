@@ -3,6 +3,7 @@ package net
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"net/http"
 	"strconv"
@@ -29,7 +30,7 @@ func GetFileTree(w http.ResponseWriter, r *http.Request) {
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
 
-	tree := service.CreateTree(path)
+	tree := service.CreateTree(path, true)
 
 	var err = json.NewEncoder(w).Encode(tree)
 
@@ -77,7 +78,10 @@ func DeleteFiles(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Empty: ", empty)
 	fmt.Println("CB: ", createdBefore)
 	fmt.Println("NA: ", notAccessedAfter)
-	service.DeleteFiles(path, recursive, empty, createdBefore, notAccessedAfter)
+
+	deleteData := model.DeleteData{path, recursive, empty, createdBefore,
+		notAccessedAfter}
+	service.DeleteFiles(&deleteData)
 
 	json.NewEncoder(w).Encode("Deleted")
 
@@ -102,6 +106,8 @@ func ReorganizeFiles(w http.ResponseWriter, r *http.Request) {
 	keys, _ = r.URL.Query()["createdDate"]
 	createdDate := keys[0]
 
-	service.ReorganizeFiles(src, dest, recursive, fileType, fileSize, createdDate)
+	reorganizeData := model.ReorganizeData{src, dest, recursive,
+		fileType, fileSize, createdDate}
+	service.ReorganizeFiles(&reorganizeData)
 
 }

@@ -15,6 +15,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"log"
 	"os"
@@ -95,7 +96,9 @@ to quickly create a Cobra application.`,
 		fmt.Println("FileSize: ", fileSizeFlag)
 		fmt.Println("CreatedDate: ", createdDateFlag)
 
-		service.ReorganizeFiles(args[0], dest, recursiveFlag, fileTypeFlag, fileSizeFlag, createdDateFlag)
+		reorganizeData := model.ReorganizeData{args[0], dest, recursiveFlag, fileTypeFlag,
+			fileSizeFlag, createdDateFlag}
+		service.ReorganizeFiles(&reorganizeData)
 
 	},
 }

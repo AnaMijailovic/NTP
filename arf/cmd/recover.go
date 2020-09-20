@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"os"
@@ -48,8 +49,14 @@ to quickly create a Cobra application.`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		service.Recover(args[0])
+		errs := service.Recover(args[0])
 
+		if len(errs) > 0 {
+			fmt.Println("ARF was unable to recover the following files: ")
+			for _, err := range errs {
+				fmt.Println("Err: ", err)
+			}
+		}
 	},
 }
 

@@ -6,5 +6,6 @@ type RenameData struct {
 	Random bool
 	Remove string
 	ReplaceWith string
+	Pattern string
 }
 

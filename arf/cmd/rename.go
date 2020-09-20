@@ -65,9 +65,10 @@ to quickly create a Cobra application.`,
 		randomFlag, _ := cmd.Flags().GetBool("random")
 		removeFlag, _ := cmd.Flags().GetString("remove")
 		replaceWithFlag, _ := cmd.Flags().GetString("replaceWith")
+		patternFlag, _ := cmd.Flags().GetString("pattern")
 
 		renameData := model.RenameData{path, recursiveFlag, randomFlag, removeFlag,
-			replaceWithFlag }
+			replaceWithFlag, patternFlag }
 
 		fmt.Println(renameData)
 		service.Rename(&renameData)
@@ -81,8 +82,8 @@ func init() {
 	renameCmd.Flags().BoolP("random", "n", false, "Generate random new names")
 	renameCmd.Flags().StringP("remove", "m", "",
 		"Remove a given part of the file name")
-	renameCmd.Flags().StringP("replace", "c", "",
-		"Replace a given part of the file name")
 	renameCmd.Flags().StringP("replaceWith", "w", "",
+		"Replace with a given part of the file name")
+	renameCmd.Flags().StringP("pattern", "p", "",
 		"Replace with a given part of the file name")
 }
