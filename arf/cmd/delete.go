@@ -13,12 +13,10 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"log"
-	"os"
 	"time"
 )
 
@@ -32,19 +30,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("you must provide path argument")
-		}
+		return CheckPaths(args)
 
-		// Check if path is valid
-		if file, err := os.Open(args[0]); err != nil {
-			return err
-		} else {
-			file.Close()
-		}
-		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// get path
+		path := GetPath(args, 0)
 
 		// Get flag values
 		recursiveFlag, _ := cmd.Flags().GetBool("recursive")
@@ -61,7 +53,7 @@ to quickly create a Cobra application.`,
 			log.Fatal("ERROR: You must provide a deletion criteria")
 		}
 
-		deleteData := model.DeleteData{args[0], recursiveFlag, emptyFlag, cbTime,
+		deleteData := model.DeleteData{path, recursiveFlag, emptyFlag, cbTime,
 			naTime}
 		service.DeleteFiles( &deleteData )
 

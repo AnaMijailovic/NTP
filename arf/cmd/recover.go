@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // recoverCmd represents the recover command
@@ -38,14 +37,7 @@ to quickly create a Cobra application.`,
 			return errors.New("you must provide a path argument")
 		}
 
-		// Check if path are valid
-		if file, err := os.Open(args[0]); err != nil {
-			return err
-		}else {
-			file.Close()
-		}
-
-		return nil
+		return CheckPaths(args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -54,7 +46,7 @@ to quickly create a Cobra application.`,
 		if len(errs) > 0 {
 			fmt.Println("ARF was unable to recover the following files: ")
 			for _, err := range errs {
-				fmt.Println("Err: ", err)
+				fmt.Println("Error: ", err)
 			}
 		}
 	},

@@ -13,12 +13,8 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
-	"log"
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -33,32 +29,11 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Args: func(cmd *cobra.Command, args []string) error {
 
-		// Check if path is valid (if provided)
-		if len(args) > 0{
-			if file, err := os.Open(args[0]); err != nil {
-				return err
-			}else {
-				file.Close()
-			}
-		}
-
-		return nil
+		return CheckPaths(args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("rename called")
-		var path string
-		var err error
 
-		if len(args) > 0 {
-			path = args[0]
-		}else {
-			path, err = os.Getwd()
-			if err != nil {
-				log.Println(err)
-			}
-		}
-
-		fmt.Println(path)
+		path := GetPath(args, 0)
 
 		// Get flag values
 		recursiveFlag, _ := cmd.Flags().GetBool("recursive")
@@ -70,7 +45,6 @@ to quickly create a Cobra application.`,
 		renameData := model.RenameData{path, recursiveFlag, randomFlag, removeFlag,
 			replaceWithFlag, patternFlag }
 
-		fmt.Println(renameData)
 		service.Rename(&renameData)
 	},
 }
