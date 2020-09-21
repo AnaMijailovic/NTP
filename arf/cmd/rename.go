@@ -16,6 +16,7 @@ import (
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 // renameCmd represents the rename command
@@ -42,10 +43,24 @@ to quickly create a Cobra application.`,
 		replaceWithFlag, _ := cmd.Flags().GetString("replaceWith")
 		patternFlag, _ := cmd.Flags().GetString("pattern")
 
+		// Check if rename criteria is provided
+		if !randomFlag && removeFlag == "" && patternFlag == "" {
+			log.Fatal("ERROR: You must provide rename criteria")
+		}
+
+		// Check if there is only one criteria provided
+		if (randomFlag && removeFlag != "") ||
+			(randomFlag && patternFlag != "") ||
+			(removeFlag != "" && patternFlag != ""){
+			log.Fatal("ERROR: You must provide exactly one rename criteria")
+		}
+
 		renameData := model.RenameData{path, recursiveFlag, randomFlag, removeFlag,
 			replaceWithFlag, patternFlag }
 
-		service.Rename(&renameData)
+		errs := service.Rename(&renameData)
+		PrintErrors(errs, "ARF was unable to rename the following files: ")
+
 	},
 }
 

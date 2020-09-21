@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -33,4 +34,14 @@ func GetPath(args []string, index int) string {
 	}
 
 	return path
+}
+
+func PrintErrors(errs []error, message string) {
+
+	if len(errs) > 0 {
+		fmt.Println(message)
+		for _, err := range errs {
+			fmt.Println("Error: ", err)
+		}
+	}
 }

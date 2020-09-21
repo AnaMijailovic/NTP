@@ -105,7 +105,6 @@ func GetFileChartData(root string, chartType string) map[string]int64 {
 		}
 
 		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 			return err
 		}
 

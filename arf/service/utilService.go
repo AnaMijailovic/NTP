@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -59,4 +60,24 @@ func writeRecoveryData(recoveryFilePath string, src string, dest string) {
 	defer recoveryFile.Close()
 
 	recoveryFile.WriteString(src + "," + dest + "\n")
+}
+
+func renameIfNotExists(old string, new string) error {
+
+	if old == new {
+		return nil
+	}
+
+	if file, err := os.Open(new); err == nil {
+		file.Close()
+		return errors.New("The file with the same name already exists: " + new)
+	}
+
+	err := os.Rename(old, new)
+
+	if err != nil {
+		return errors.New("Unable to remove: " + new)
+	}
+
+	return nil
 }

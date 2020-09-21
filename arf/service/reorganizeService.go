@@ -4,15 +4,21 @@ import (
 	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"gopkg.in/djherbis/times.v1"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func ReorganizeFiles(reorganizeData *model.ReorganizeData) {
+func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
-	// TODO Something better here?
-	os.Remove(recoveryFilePath)
+
+	if file, err := os.Open(recoveryFilePath); err == nil {
+		file.Close()
+		log.Fatal("ERROR: ArfRecover file already exists at the destination path")
+	}
+
+	errs := make([]error, 0)
 
 	Walk(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -32,15 +38,21 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) {
 			}
 		}
 
-		// Move file
+		// Move a file
 		newFilePath :=  newFolderPath + string(os.PathSeparator) + info.Name()
-		err = os.Rename(path,newFilePath)
 
-		writeRecoveryData(recoveryFilePath, path, newFilePath)
+		err = renameIfNotExists(path, newFilePath)
+
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			writeRecoveryData(recoveryFilePath, path, newFilePath)
+		}
 
 		return nil
 	})
 
+	return errs
 }
 
 func generateFolderName(path string, reorganizeData *model.ReorganizeData) string {

@@ -3,7 +3,7 @@ package service
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"log"
 	"os"
@@ -11,10 +11,15 @@ import (
 	"strings"
 )
 
-func Rename(renameData *model.RenameData) {
+func Rename(renameData *model.RenameData) []error {
+	errs := make([]error, 0)
+
 	recoveryFilePath := renameData.Path + string(os.PathSeparator) + "arfRecover.txt"
-	// TODO Something better here?
-	os.Remove(recoveryFilePath)
+
+	if file, err := os.Open(recoveryFilePath); err == nil {
+		file.Close()
+		log.Fatal("ERROR: ArfRecover file already exists at the destination path")
+	}
 
 	Walk(renameData.Path, renameData.Recursive, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -22,42 +27,48 @@ func Rename(renameData *model.RenameData) {
 		}
 
 		newFileName := generateNewFileName(path, renameData)
+		ext := filepath.Ext(newFileName)
+		withoutExt := strings.Replace(newFileName, ext, "", 1)
+		if withoutExt == "" {
+			errs = append(errs, errors.New("Unable to rename " + path + " file."))
+		} else {
 
-		newFilePath := filepath.Dir(path) + string(os.PathSeparator) + newFileName
+			newFilePath := filepath.Dir(path) + string(os.PathSeparator) + newFileName
 
-		fmt.Println("New file path: ", newFilePath)
+			// Rename a file
+			err = renameIfNotExists(path, newFilePath)
 
-		// Rename a file
-		err = os.Rename(path, newFilePath)
+			if err != nil {
+				errs = append(errs, err)
+			} else {
+				writeRecoveryData(recoveryFilePath, path, newFilePath)
+			}
 
-
-		if err != nil {
-			log.Fatal(err)
 		}
-
-		writeRecoveryData(recoveryFilePath, path, newFilePath)
-
 		return nil
-	})
+	} )
+
+	return errs
 }
 
 func generateNewFileName(oldFilePath string, renameData *model.RenameData) string {
 	oldFileName := filepath.Base(oldFilePath)
+	extension := filepath.Ext(oldFilePath)
+	oldWithoutExt := strings.Replace(oldFileName, extension, "",1)
+
 	if renameData.Random {
 		randomStr, _ := GenerateRandomString(12)
-		extension := filepath.Ext(oldFilePath)
-		randomStr = randomStr + extension
-		return  randomStr
+		return  randomStr + extension
 	} else if renameData.Remove != "" {
-		return strings.ReplaceAll(oldFileName, renameData.Remove, renameData.ReplaceWith)
+		return strings.ReplaceAll(oldWithoutExt, renameData.Remove, renameData.ReplaceWith) + extension
 	} else if renameData.Pattern != "" {
 		newName, _ := parsePatternString(renameData.Pattern, oldFileName )
-		fmt.Println("New name: ", newName)
 		return newName
+	} else {
+		log.Fatal("ERROR: Invalid rename criteria")
 	}
 
-	//TODO other cases
-	return "TODO..."
+	return ""
 }
 
 func parsePatternString(patternStr string, oldFileName string) (string, error){
@@ -66,12 +77,20 @@ func parsePatternString(patternStr string, oldFileName string) (string, error){
 	ext := filepath.Ext(oldFileName)
 	oldFileName = strings.Replace(oldFileName, ext, "", 1)
 
+	firstIndex := strings.Index(patternStr, "{")
+	if firstIndex == -1 {
+		log.Fatal("ERROR: The pattern is invalid")
+	}
+
 	for strings.Index(patternStr, "{") != -1 {
 		startIndex := strings.Index(patternStr, "{")
 		endIndex := strings.Index(patternStr, "}")
-		tag := patternStr[startIndex+1 : endIndex]
 
-		fmt.Println("Between: ", tag)
+		if endIndex == -1 || startIndex > endIndex {
+			log.Fatal("ERROR: The pattern is invalid")
+		}
+
+		tag := patternStr[startIndex+1 : endIndex]
 
 		if tag == "name" {
 			patternStr = strings.Replace(patternStr, patternStr[startIndex:endIndex+1], oldFileName, 1)
@@ -79,9 +98,13 @@ func parsePatternString(patternStr string, oldFileName string) (string, error){
 		}else if tag == "random" {
 			random, _ := GenerateRandomString(12)
 			patternStr = strings.Replace(patternStr, patternStr[startIndex:endIndex+1], random, 1 )
+		}else {
+			log.Fatal("ERROR: The pattern is invalid")
 		}
 
 	}
+
+	// Check if pattern is not changed -> no {} in the pattern
 	return patternStr + ext, nil
 
 }

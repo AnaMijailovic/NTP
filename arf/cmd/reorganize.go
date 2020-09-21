@@ -71,8 +71,9 @@ to quickly create a Cobra application.`,
 
 		reorganizeData := model.ReorganizeData{src, dest, recursiveFlag, fileTypeFlag,
 			fileSizeFlag, createdDateFlag}
-		service.ReorganizeFiles(&reorganizeData)
 
+		errs := service.ReorganizeFiles(&reorganizeData)
+		PrintErrors(errs, "ARF was unable to move the following files: ")
 	},
 }
 
