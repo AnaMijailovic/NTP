@@ -6,17 +6,18 @@ import (
 	"os"
 )
 
-func DeleteFiles(deleteData *model.DeleteData) {
+func DeleteFiles(deleteData *model.DeleteData) *int {
 	tree := CreateTree(deleteData.Path, deleteData.Recursive)
-
-	postorderDelete(tree.Root, deleteData)
-
+	filesDeleted := 0
+	filesDel := &filesDeleted
+	filesDel = postorderDelete(tree.Root, deleteData, &filesDeleted)
+	return filesDel
 }
 
-func postorderDelete(node *model.Node, deleteData *model.DeleteData ) {
+func postorderDelete(node *model.Node, deleteData *model.DeleteData, filesDeleted *int) *int {
 
 	for _, file := range node.Children {
-		postorderDelete(file, deleteData)
+		filesDeleted = postorderDelete(file, deleteData, filesDeleted)
 	}
 
 	file := node.Element.(model.File)
@@ -29,7 +30,11 @@ func postorderDelete(node *model.Node, deleteData *model.DeleteData ) {
 		err := os.Remove(file.FullPath)
 		if err != nil {
 			fmt.Println(err)
+		} else {
+			fmt.Println("Removed: ", file.FullPath)
+			*filesDeleted++
 		}
-		fmt.Println("Removed: ", file.FullPath)
 	}
+
+	return filesDeleted
 }

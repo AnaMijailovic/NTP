@@ -15,6 +15,9 @@ func Serve() {
 	http.HandleFunc("/api/fileTree", GetFileTree)
 	http.HandleFunc("/api/fileTypeData", GetTypeChartData)
 	http.HandleFunc("/api/deleteFiles", DeleteFiles)
+	http.HandleFunc("/api/rename", RenameFiles)
+	http.HandleFunc("/api/reorganize", ReorganizeFiles)
+	http.HandleFunc("/api/recover", Recover)
 
 	fmt.Println("Starting server ...")
 	http.ListenAndServe(":8080", nil)
@@ -22,10 +25,6 @@ func Serve() {
 }
 
 func GetFileTree(w http.ResponseWriter, r *http.Request) {
-
-	/*vars := mux.Vars(r)
-	path := vars["path"]
-	fmt.Println("Path: ", path)*/
 
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
@@ -35,7 +34,8 @@ func GetFileTree(w http.ResponseWriter, r *http.Request) {
 	var err = json.NewEncoder(w).Encode(tree)
 
 	if err != nil {
-		fmt.Println("Some error happened: ", err)
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
@@ -50,7 +50,8 @@ func GetTypeChartData(w http.ResponseWriter, r *http.Request) {
 	var err = json.NewEncoder(w).Encode(data)
 
 	if err != nil {
-		fmt.Println("Some error happened: ", err)
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
@@ -73,17 +74,13 @@ func DeleteFiles(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Accessed: ", keys[0])
 	notAccessedAfter, _ := time.Parse("02-Jan-2006", keys[0])
 
-	fmt.Println("Path: ", path)
-	fmt.Println("Recursive: ", recursive)
-	fmt.Println("Empty: ", empty)
-	fmt.Println("CB: ", createdBefore)
-	fmt.Println("NA: ", notAccessedAfter)
-
 	deleteData := model.DeleteData{path, recursive, empty, createdBefore,
 		notAccessedAfter}
-	service.DeleteFiles(&deleteData)
 
-	json.NewEncoder(w).Encode("Deleted")
+	fmt.Println(deleteData)
+	filesDeleted := service.DeleteFiles(&deleteData)
+
+	json.NewEncoder(w).Encode("Deleted " + strconv.FormatInt(int64(*filesDeleted),10 )+ " files")
 
 }
 
@@ -108,6 +105,57 @@ func ReorganizeFiles(w http.ResponseWriter, r *http.Request) {
 
 	reorganizeData := model.ReorganizeData{src, dest, recursive,
 		fileType, fileSize, createdDate}
-	service.ReorganizeFiles(&reorganizeData)
+
+	fmt.Println(reorganizeData)
+	errs := service.ReorganizeFiles(&reorganizeData)
+
+	if len(errs) > 0 {
+		// TODO
+	}
+
+}
+
+func RenameFiles(w http.ResponseWriter, r *http.Request) {
+	keys, _ := r.URL.Query()["path"]
+	path := keys[0]
+
+	keys, _ = r.URL.Query()["recursive"]
+	recursive, _ := strconv.ParseBool(keys[0])
+
+	keys, _ = r.URL.Query()["random"]
+	random, _ := strconv.ParseBool(keys[0])
+
+	keys, _ = r.URL.Query()["remove"]
+	remove := keys[0]
+
+	keys, _ = r.URL.Query()["replaceWith"]
+	replaceWith := keys[0]
+
+	keys, _ = r.URL.Query()["pattern"]
+	pattern := keys[0]
+
+	renameData := model.RenameData{path, recursive, random,
+		remove, replaceWith, pattern}
+
+	fmt.Println(renameData)
+	errs := service.Rename(&renameData)
+
+	if len(errs) > 0 {
+		// TODO
+	}
+
+}
+
+func Recover(w http.ResponseWriter, r *http.Request) {
+
+	keys, _ := r.URL.Query()["path"]
+	path := keys[0]
+
+	fmt.Println(path)
+	errs := service.Recover(path)
+
+	if len(errs) > 0 {
+		// TODO
+	}
 
 }

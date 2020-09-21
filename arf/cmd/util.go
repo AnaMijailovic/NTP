@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func  CheckPaths(paths []string) error {
@@ -44,4 +45,27 @@ func PrintErrors(errs []error, message string) {
 			fmt.Println("Error: ", err)
 		}
 	}
+}
+
+func ConvertStringToDate(dateStr string, dateName string) time.Time {
+
+	var err error
+	var date time.Time
+
+	if dateStr != "" {
+		date, err = time.Parse("02-01-2006", dateStr)
+	}else {
+		date, err = time.Parse("02-01-2006", "01-01-0001")
+	}
+
+	if err != nil {
+		if _, ok := err.(*time.ParseError); ok {
+			log.Fatal("ERROR: " + dateName + " date format is not valid: ", err)
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	return date
+
 }

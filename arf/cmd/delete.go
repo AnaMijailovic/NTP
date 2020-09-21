@@ -13,11 +13,11 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"github.com/AnaMijailovic/NTP/arf/service"
 	"github.com/spf13/cobra"
 	"log"
-	"time"
 )
 
 // deleteCmd represents the delete command
@@ -45,8 +45,8 @@ to quickly create a Cobra application.`,
 		notAccessedAfterFlag, _ := cmd.Flags().GetString("notAccessedAfter")
 
 		// Convert strings to dates
-		cbTime := convertStringToDate(createdBeforeFlag, "createdBefore")
-		naTime := convertStringToDate(notAccessedAfterFlag, "notAccessedAfter")
+		cbTime := ConvertStringToDate(createdBeforeFlag, "createdBefore")
+		naTime := ConvertStringToDate(notAccessedAfterFlag, "notAccessedAfter")
 
 		// Check if criteria is provided
 		if !emptyFlag && cbTime.IsZero() && naTime.IsZero() {
@@ -55,7 +55,8 @@ to quickly create a Cobra application.`,
 
 		deleteData := model.DeleteData{path, recursiveFlag, emptyFlag, cbTime,
 			naTime}
-		service.DeleteFiles( &deleteData )
+		filesDeleted := service.DeleteFiles( &deleteData )
+		fmt.Println("Deleted files: ", *filesDeleted)
 
 	},
 }
@@ -69,27 +70,4 @@ func init() {
 		"Delete files created before the given date")
 	deleteCmd.Flags().StringP("notAccessedAfter", "a", "",
 		"Delete files not accessed after the given date")
-}
-
-func convertStringToDate(dateStr string, dateName string) time.Time {
-
-	var err error
-	var date time.Time
-
-	if dateStr != "" {
-		date, err = time.Parse("02-01-2006", dateStr)
-	}else {
-		date, err = time.Parse("02-01-2006", "01-01-0001")
-	}
-
-	if err != nil {
-		if _, ok := err.(*time.ParseError); ok {
-			log.Fatal("ERROR: " + dateName + " date format is not valid: ", err)
-		} else {
-			log.Fatal(err)
-		}
-	}
-
-	return date
-
 }
