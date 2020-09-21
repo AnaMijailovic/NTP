@@ -53,16 +53,17 @@ ArfMainWin class >> defaultSpec [
 { #category : #'canvas drawing' }
 ArfMainWin >> drawBarChart: canvas path: path [
 
-	| bar data xData yData|
+	| bar data xData yData xLabels |
 	
 	data := self getChartData: path.
 	xData := data values.
 	"xData := xData collect: [ :each | each asString  ]."
 	yData := data values.
+	xLabels := data keys.
 	self inform: yData.
 	bar := RSChart new
 			container: canvas.
-	bar addPlot: (RSBarPlot new x: xData y: yData).
+	bar addPlot: (ArfBarPlot new x: xData y: yData; xLabels: xLabels).
 	
 	bar addDecoration: (RSVerticalTick new 
 		numberOfTicks: 5;
@@ -77,16 +78,17 @@ ArfMainWin >> drawBarChart: canvas path: path [
 { #category : #'canvas drawing' }
 ArfMainWin >> drawBarChart: canvas path: path chartType: chartType [
 
-	| bar data xData yData|
+	| bar data xData yData xLabels |
 	
 	data := self getChartData: path chartType: chartType.
 	xData := data values.
 	"xData := xData collect: [ :each | each asString  ]."
 	yData := data values.
-	self inform: yData.
+	xLabels := data keys.
+
 	bar := RSChart new
 			container: canvas.
-	bar addPlot: (RSBarPlot new x: xData y: yData).
+	bar addPlot: (ArfBarPlot new x: xData y: yData; xLabels: xLabels).
 	
 	bar addDecoration: (RSVerticalTick new 
 		numberOfTicks: 5;
@@ -160,7 +162,7 @@ ArfMainWin >> drawPieChart: canvas path: path chartType: chartType [
 ArfMainWin >> drawTreeView: canvas path: path [
 
 	| shapes tree createShape |
-   	tree := self getTree: 'http://localhost:8080/api/fileTree?path=', path .
+   	tree := self getTree: path .
 
 	canvas color: '1ced1cccc'.
 
@@ -170,7 +172,7 @@ ArfMainWin >> drawTreeView: canvas path: path [
 			model: node;
 		   color:  (Color red alpha: 0.5);
 		   size: 10;
-		   draggable;
+		   "draggable;"
 			yourself.
 		group := RSGroup new. 
 		label := RSLabel new 	
@@ -197,7 +199,6 @@ ArfMainWin >> drawTreeView: canvas path: path [
 	canvas edges pushBack.
 	RSTreeLayout on: shapes.
 	canvas @ RSCanvasController.
-
 ]
 
 { #category : #initialization }
@@ -220,9 +221,17 @@ data := (NeoJSONReader on: content readStream)
 ArfMainWin >> getChartData: path chartType: chartType [
 	| response content data |
 	response := (ZnClient new)
-   		url: 'http://localhost:8080/api/fileTypeData?chartType=', chartType ,'&createdDate&path=', path;
+   		url: 'http://localhost:8080/api/fileTypeData';
+		queryAt: 'path' put: path;
+		queryAt: 'chartType' put: chartType;
+		ifFail: [ :ex | self inform: ex printString ];
    		get;
    		response.
+content := response contents.
+
+response isSuccess
+   ifFalse: [ self inform: 'Something went wrong'].
+
 content := response contents.
 
 data := (NeoJSONReader on: content readStream)
@@ -250,10 +259,11 @@ file := (NeoJSONReader on: content readStream)
 ]
 
 { #category : #initialization }
-ArfMainWin >> getTree: url [
+ArfMainWin >> getTree: path [
 	| response content tree |
 	response := (ZnClient new)
-   		url: url;
+   		url: 'http://localhost:8080/api/fileTree';
+		queryAt: 'path' put: path;
    		get;
    		response.
 content := response contents.
@@ -356,14 +366,12 @@ ArfMainWin >> renderChart: canvas [
 { #category : #'canvas drawing' }
 ArfMainWin >> showChart [
 	| str chartType enteredPath |
-	str := ( chartBtns   associations detect: [ :each | each value state ]) key.
-	chartType := ( chartTypeBtns   associations detect: [ :each | each value state ]) key.
+	str := ( chartBtns associations detect: [ :each | each value state ]) key.
+	chartType := ( chartTypeBtns  associations detect: [ :each | each value state ]) key.
 	enteredPath := pathInput text.
-	self inform: ( 'Entered path: ', chartType  ).
 
-	str = 'treeViewBtn' ifTrue: [    chart script: [ :canvas | 
+	str = 'treeViewBtn' ifTrue: [  chart script: [ :canvas | 
 		self drawTreeView: canvas path: enteredPath]] .
 	str = 'pieChartBtn' ifTrue: [ chart script: [ :canvas | self drawPieChart: canvas path: enteredPath chartType: chartType]].
 	str = 'barChartBtn' ifTrue: [ chart script: [ :canvas | self drawBarChart: canvas path: enteredPath chartType: chartType]]
-
 ]
