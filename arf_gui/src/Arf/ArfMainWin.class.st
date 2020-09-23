@@ -160,45 +160,43 @@ ArfMainWin >> drawPieChart: canvas path: path chartType: chartType [
 
 { #category : #'canvas drawing' }
 ArfMainWin >> drawTreeView: canvas path: path [
-
-	| shapes tree createShape |
-   	tree := self getTree: path .
-
+	| shapes tree createShape detail |
+	tree := self getTree: path.
 	canvas color: '1ced1cccc'.
-
 	createShape := [ :node | 
-		| ellipse group label|
-		ellipse := RSEllipse new 
-			model: node;
-		   color:  (Color red alpha: 0.5);
-		   size: 10;
-		   "draggable;"
-			yourself.
-		group := RSGroup new. 
-		label := RSLabel new 	
-			text: node element name; 
-			fontSize: 2;
-			yourself.
-		group add: label;
-				add: ellipse.
-	  	RSVerticalLineLayout new alignCenter on: group.
-		RSComposite new
-			shapes: group;
-			model: node;
-			draggable;
-			yourself .]. 
-		 
-	shapes := tree asList collect: [ :node | 
-		createShape value: node ]. 
-
+	| ellipse group label |
+	ellipse := ArfEllipse new
+		model: node;
+		color: (Color blue alpha: 0.7);
+		size: 25;
+		"draggable;"
+			"contextMenu: self mainMenu;"
+			when: RSMouseDoubleClick
+			do: [ :evt | ArfFileDetailsPresenter new model: node element; openModalWithSpec ];
+		yourself.	"Show additional informations about the file"
+	group := RSGroup new.
+	label := RSLabel new
+		text: node element name;
+		fontSize: 3;
+		yourself.
+	group
+		add: label;
+		add: ellipse.
+	RSVerticalLineLayout new alignCenter on: group.
+	RSComposite new
+		shapes: group;
+		model: node;
+		draggable;
+		yourself ].
+	shapes := tree asList collect: [ :node | createShape value: node ].
 	canvas addAll: shapes.
 	RSEdgeBuilder line
 		canvas: canvas;
-		objects: tree asList; 
+		objects: tree asList;
 		connectToAll: #children.
 	canvas edges pushBack.
 	RSTreeLayout on: shapes.
-	canvas @ RSCanvasController.
+	canvas @ RSCanvasController
 ]
 
 { #category : #initialization }
@@ -239,23 +237,6 @@ data := (NeoJSONReader on: content readStream)
    next.
 
 ^ data
-]
-
-{ #category : #initialization }
-ArfMainWin >> getDemo [
-	| response content file |
-	response := (ZnClient new)
-   		url: 'http://localhost:8080/api/fileTree?path=C:\Users\anaam\go\src\github.com\AnaMijailovic\NTP\arf\cmd\root.go';
-   		get;
-   		response.
-content := response contents.
-
-file := (NeoJSONReader on: content readStream)
-   mapInstVarsFor: ArfFile;
-   nextAs: ArfFile.
-
-^ self inform: file name
-"^ self inform: content"
 ]
 
 { #category : #initialization }
@@ -318,7 +299,7 @@ ArfMainWin >> initializePresenters [
 ArfMainWin >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Arf';
-		initialExtent: 900@700;
+		initialExtent: 900@650;
 		centered
 
 ]
@@ -334,10 +315,6 @@ ArfMainWin >> mainMenu [
 					name: 'File';
 					icon: (self iconNamed: #openIcon);
 					action: [ self inform: 'Not implemented']];
-		   addItem: [ :item | 
-				item 
-					name: 'Get Hello World';
-					action: [ self getDemo ]];
 			addItem: [ :item |
 				item 
 					name: 'Reorganize';
@@ -346,6 +323,10 @@ ArfMainWin >> mainMenu [
 				item
 					name: 'Rename';
 					action: [ ArfRenamePresenter new openWithSpec ]];
+			addItem: [ :item | 
+				item
+					name: 'Recover';
+					action: [ ArfRecoverPresenter new openWithSpec ]];
 			addItem: [ :item |
 				item
 					name: 'Delete';

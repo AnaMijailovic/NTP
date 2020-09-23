@@ -2,8 +2,7 @@ Class {
 	#name : #ArfInformationDialog,
 	#superclass : #SpPresenter,
 	#instVars : [
-		'message',
-		'okBtn'
+		'message'
 	],
 	#category : #Arf
 }
@@ -13,8 +12,7 @@ ArfInformationDialog class >> defaultLayout [
 	
 	^ SpBoxLayout  newVertical
 			add: '' withConstraints: [ :c | c height: 25];
-			add: #message withConstraints: [ :c | c height: 185];
-			add: #okBtn "expand: true fill: false padding: 10";
+			add: #message withConstraints: [ :c | c height: 100];
 			yourself. 
 ]
 
@@ -25,11 +23,18 @@ ArfInformationDialog class >> defaultSpec [
 ]
 
 { #category : #initialization }
+ArfInformationDialog >> initializeDialogWindow: aDialog [
+	aDialog
+		closeOnBackdropClick: false;
+		addButton: 'Ok'
+			do: [ :presenter | 
+			presenter close ].
+]
+
+{ #category : #initialization }
 ArfInformationDialog >> initializePresenters [
-	
+
 	message := self newLabel label: ''.
-	okBtn := self newButton label: 'OK';
-				action: [ self window close ] 
 	
 
 ]
@@ -39,7 +44,7 @@ ArfInformationDialog >> initializeWindow: aWindowPresenter [
 	
 	aWindowPresenter 
 		title: 'Information Dialog';
-		initialExtent: 300@300;
+		initialExtent: 300@220;
 		centered
 ]
 

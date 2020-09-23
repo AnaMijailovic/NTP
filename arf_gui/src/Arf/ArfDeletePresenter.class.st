@@ -36,6 +36,14 @@ ArfDeletePresenter class >> defaultSpec [
 	^ self defaultLayout 
 ]
 
+{ #category : #accessing }
+ArfDeletePresenter >> createdBefore [
+	| createdBefore |
+	createdBefore := '01-01-0001' .
+	creationCheckBox state  ifTrue: [ createdBefore := creationDateInput date printFormat: #(1 2 3 $- 2 1)] .
+	^ createdBefore 
+]
+
 { #category : #initialization }
 ArfDeletePresenter >> initializePresenters [
 	pathInput := self newTextInput autoAccept: true.
@@ -60,48 +68,66 @@ ArfDeletePresenter >> initializePresenters [
 ArfDeletePresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Delete';
-		initialExtent: 300@430;
+		initialExtent: 300@415;
 		centered
+]
+
+{ #category : #accessing }
+ArfDeletePresenter >> notAccessedAfter [
+	| notAccessedAfter |
+	notAccessedAfter := '01-01-0001' .
+	creationCheckBox state  ifTrue: [ notAccessedAfter := creationDateInput date printFormat: #(1 2 3 $- 2 1)] .
+	^ notAccessedAfter 
+]
+
+{ #category : #accessing }
+ArfDeletePresenter >> path [ 
+	|path isValidPath |
+
+	path := pathInput text.
+	path = '' ifTrue: [ self error: 'You must enter a path' ]. 
+	
+	isValidPath := path asFileReference.
+	isValidPath exists ifFalse: [ self error: 'Path is invalid' ] .
+	
+	^ path
 ]
 
 { #category : #initialization }
 ArfDeletePresenter >> submitDelete [
-	| enteredPath recursive empty createdBefore notAccessedAfter response content isValidPath |
+	| enteredPath recursive empty createdBefore notAccessedAfter response content |
 
 	recursive := recursiveCheckBox state asString.
 	empty := emptyCheckBox  state asString.
-	enteredPath := pathInput text.
 	
-	createdBefore := '01-01-0001' .
-	notAccessedAfter := '01-01-0001' .
-	creationCheckBox state  ifTrue: [ createdBefore := creationDateInput date printFormat: #(1 2 3 $- 2 1)] .
-	accessedCheckBox state ifTrue: [ notAccessedAfter := accessedDateInput date printFormat: #(1 2 3 $- 2 1)] .
+	createdBefore := self createdBefore  .
+	notAccessedAfter := self notAccessedAfter .
+	
+	[enteredPath := self path ]
+  			on: Error
+  			do: [ :ex| ArfInformationDialog new message: ex messageText; openModalWithSpec. ^ self] .
 	
 	"Validate that at least one criteria is provided"
 	createdBefore = '01-01-0001' ifTrue: [ 
 		notAccessedAfter = '01-01-0001' ifTrue: [ 
 			emptyCheckBox state ifFalse: [ 
-				self inform: 'Critera not provided'.
+				ArfInformationDialog new message: 'Critera not provided'; openModalWithSpec. ^ self.
 				 ]
 			 ]
 		] .
 	
-	"Validate path"
-	enteredPath = '' ifTrue: [ ArfInformationDialog new message: 'You must enter a path';
-		openWithSpec. ^ self ]. 
-	isValidPath := enteredPath asFileReference.
-	isValidPath exists ifFalse: [ ArfInformationDialog  new message: 'The path is invalid'; 
-		openWithSpec. ^ self] .
-	
-	response := (ZnClient new)
+	[response := (ZnClient new)
    		url: 'http://localhost:8080/api/deleteFiles';
 		queryAt: 'path' put: enteredPath ;
 		queryAt: 'recursive' put: recursive;
 		queryAt: 'empty' put: empty;
-		queryAt: 'createdBefore' put: createdBefore ;
-		queryAt: 'notAccessedAfter' put: notAccessedAfter;
+		queryAt: 'createdBefore' put: self createdBefore ;
+		queryAt: 'notAccessedAfter' put: self notAccessedAfter;
    		delete;
-   		response.
+   		response]
+		on: ConnectionTimedOut 
+		do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
+			
    content := response contents. 
-	ArfInformationDialog new message: content asString; openWithSpec.
+	ArfInformationDialog new message: content asString; openModalWithSpec.
 ]

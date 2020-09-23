@@ -54,6 +54,21 @@ ArfFile >> fullPath: aFullPath [
 	fullPath := aFullPath 
 ]
 
+{ #category : #initialization }
+ArfFile >> initialize [
+	
+	self class initializeSlots: self .
+	super initialize .
+	name := 'namee' .
+	fullPath := '' .
+	isDir := false . 
+	size := 0 .
+	fileType := '' .
+	created := '2018-01-01' asDate .
+	modified := '2018-01-01' asDate . 
+	accessed := '2018-01-01' asDate .
+]
+
 { #category : #accessing }
 ArfFile >> isDir [
 	^ isDir

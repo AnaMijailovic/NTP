@@ -17,3 +17,14 @@ ArfTreeNode >> children [
 ArfTreeNode >> element [
 	^ element
 ]
+
+{ #category : #accessing }
+ArfTreeNode >> element: aElement [
+	element := aElement
+]
+
+{ #category : #initialization }
+ArfTreeNode >> initialize [ 
+		
+	element := ArfFile new initialize . 
+]

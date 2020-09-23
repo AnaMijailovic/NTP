@@ -2,11 +2,13 @@ Class {
 	#name : #ArfReorganizePresenter,
 	#superclass : #SpPresenterWithModel,
 	#instVars : [
-		'pathInput',
+		'srcPathInput',
+		'destPathInput',
 		'recursiveCheckBox',
 		'fileTypeRadioBtn',
-		'creationRadioBtn',
-		'creationDateStepInput',
+		'creationDRadioBtn',
+		'creationMRadioBtn',
+		'creationYRadioBtn',
 		'fileSizeRadioBtn',
 		'sizeStepInput',
 		'reorganizeTypeBtns',
@@ -19,12 +21,17 @@ Class {
 ArfReorganizePresenter class >> defaultLayout [
 
 		^ SpBoxLayout   newVertical 
-			add: 'Path: ' withConstraints: [ :c | c height: 25];
-			add: #pathInput withConstraints: [ :c | c height: 25];
+			add: '' withConstraints: [ :c | c height: 25];
+			add: 'Source directory path: ' withConstraints: [ :c | c height: 25];
+			add: #srcPathInput withConstraints: [ :c | c height: 25];
+			add: 'Destination directory path: ' withConstraints: [ :c | c height: 25];
+			add: #destPathInput withConstraints: [ :c | c height: 25];
 			add: #recursiveCheckBox withConstraints: [ :c | c height: 45];
+			add: 'Reorganize by: ' withConstraints: [ :c | c height: 25];
 			add: #fileTypeRadioBtn withConstraints: [ :c | c height: 45];
-			add: #creationRadioBtn withConstraints: [ :c | c height: 45];
-			add: #creationDateStepInput withConstraints: [ :c | c height: 45];
+			add: #creationDRadioBtn withConstraints: [ :c | c height: 45];
+		   add: #creationMRadioBtn withConstraints: [ :c | c height: 45];
+		   add: #creationYRadioBtn withConstraints: [ :c | c height: 45];
 			add: #fileSizeRadioBtn withConstraints: [ :c | c height: 45];
 			add: #sizeStepInput;
 			add: #submitBtn withConstraints: [ :c | c height: 40];
@@ -37,24 +44,66 @@ ArfReorganizePresenter class >> defaultSpec [
 	^ self defaultLayout 
 ]
 
+{ #category : #accessing }
+ArfReorganizePresenter >> creationDate [
+   | creationDate reorganizeBy |
+
+	creationDate := ''.
+	reorganizeBy  := ( reorganizeTypeBtns associations detect: [ :each | each value state ]) key.
+	reorganizeBy = 'creationDay' ifTrue: [ creationDate := 'd'].
+	reorganizeBy = 'creationMonth' ifTrue: [ creationDate := 'm'].
+	reorganizeBy = 'creationYear' ifTrue: [ creationDate := 'y'].
+	
+	^ creationDate
+]
+
+{ #category : #accessing }
+ArfReorganizePresenter >> destPath [ 
+	|destPath isValidPath |
+
+	destPath := destPathInput text.
+	destPath = '' ifTrue: [ self error: 'You must enter a destination path' ]. 
+	
+	isValidPath := destPath asFileReference.
+	isValidPath exists ifFalse: [ self error: 'Destination path is invalid' ] .
+	
+	^ destPath 
+]
+
+{ #category : #accessing }
+ArfReorganizePresenter >> fileSize [
+   | fileSize reorganizeBy |
+
+	fileSize := 0.
+	reorganizeBy  := ( reorganizeTypeBtns associations detect: [ :each | each value state ]) key.
+	reorganizeBy = 'fileSize' ifTrue: [ fileSize := sizeStepInput text asNumber ].
+	fileSize < 0  ifTrue: [self error: 'File size must be a positive value'].
+	
+	^ fileSize 
+]
+
 { #category : #initialization }
 ArfReorganizePresenter >> initializePresenters [
-	pathInput := self newTextInput autoAccept: true.
+	srcPathInput := self newTextInput autoAccept: true.
+	destPathInput := self newTextInput autoAccept: true.
 	
 	recursiveCheckBox := self newCheckBox label: 'Recursive'.
 	
 	fileTypeRadioBtn := self newRadioButton label: 'File type'.
-	creationRadioBtn := self newRadioButton label: 'Creation date'.
+	creationDRadioBtn := self newRadioButton label: 'Creation date - full date'.
+	creationMRadioBtn := self newRadioButton label: 'Creation date - month and year'.
+	creationYRadioBtn := self newRadioButton label: 'Creation date - year'.
 	fileSizeRadioBtn := self newRadioButton label: 'File size'.
-	fileTypeRadioBtn associatedRadioButtons: { creationRadioBtn . fileSizeRadioBtn }.
-	reorganizeTypeBtns  := Dictionary newFrom: { (#fileTypeRadioBtn -> fileTypeRadioBtn  ) . 
-	                                   (#creationRadioBtn -> creationRadioBtn  ) .
-												 (#fileSizeRadioBtn -> fileSizeRadioBtn  ) }. 
+	fileTypeRadioBtn associatedRadioButtons: { creationDRadioBtn . fileSizeRadioBtn .
+															creationMRadioBtn .  creationYRadioBtn }.
+	reorganizeTypeBtns  := Dictionary newFrom: { (#fileType -> fileTypeRadioBtn  ) . 
+	                                   (#creationDay -> creationDRadioBtn  ) .
+	                                   (#creationMonth -> creationMRadioBtn  ) .
+                                      (#creationYear -> creationYRadioBtn  ) .
+												 (#fileSize -> fileSizeRadioBtn  ) }. 
 	
-	creationDateStepInput := self newNumberInput autoAccept: true.
-	creationDateStepInput placeholder: 'Enter step (in months)'; beInteger .
-	sizeStepInput := self newNumberInput autoAccept: true.		
-	sizeStepInput placeholder: 'Enter step'; beInteger .							
+	sizeStepInput := self newNumberInput autoAccept: true; minimum: 1.		
+	sizeStepInput placeholder: 'Enter size step (MB)'; beInteger .							
 
 	
 	submitBtn := self newButton label: 'Reorgnize'.
@@ -65,11 +114,54 @@ ArfReorganizePresenter >> initializePresenters [
 ArfReorganizePresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Reorganize';
-		initialExtent: 300@430;
+		initialExtent: 300@530;
 		centered
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+ArfReorganizePresenter >> srcPath [ 
+	|srcPath isValidPath |
+
+	srcPath := srcPathInput text.
+	srcPath = '' ifTrue: [ self error: 'You must enter a source path' ]. 
+	
+	isValidPath := srcPath asFileReference.
+	isValidPath exists ifFalse: [ self error: 'Source path is invalid' ] .
+	
+	^ srcPath 
+]
+
+{ #category : #submit }
 ArfReorganizePresenter >> submitReorganize [
-	^ self inform: 'Submit reorganize'
+	
+	| srcPath  destPath recursive fileType creationDate fileSize reorganizeBy content response|
+
+	recursive := recursiveCheckBox state asString.
+	
+	reorganizeBy  := ( reorganizeTypeBtns associations detect: [ :each | each value state ]) key.
+	fileType := reorganizeBy = 'fileType'. 
+	
+	[fileSize := self fileSize .
+	 srcPath := self srcPath .
+	 destPath := self destPath.
+	 creationDate := self creationDate.]
+  			on: Error
+  			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
+	 
+	[response := (ZnClient new)
+   		url: 'http://localhost:8080/api/reorganize';
+		queryAt: 'src' put: srcPath;
+		queryAt: 'dest' put: destPath;
+		queryAt: 'recursive' put: recursive;
+		queryAt: 'fileType' put: fileType ;
+		queryAt: 'createdDate' put: creationDate ;
+		queryAt: 'fileSize' put: fileSize;
+   		put;
+   		response.]
+		on: ConnectionTimedOut 
+		do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
+   content := response contents. 
+	ArfInformationDialog new message: content asString; openModalWithSpec.
+
+
 ]
