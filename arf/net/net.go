@@ -110,7 +110,14 @@ func ReorganizeFiles(w http.ResponseWriter, r *http.Request) {
 	errs := service.ReorganizeFiles(&reorganizeData)
 
 	if len(errs) > 0 {
-		// TODO
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, ok := errs[0].(model.UnableToRenameFileError); ok {
+			json.NewEncoder(w).Encode("Arf was unable to move all files")
+		} else {
+			json.NewEncoder(w).Encode(errs[0].Error())
+		}
+	} else {
+		json.NewEncoder(w).Encode("Files were successfully reorganized")
 	}
 
 }
@@ -141,7 +148,13 @@ func RenameFiles(w http.ResponseWriter, r *http.Request) {
 	errs := service.Rename(&renameData)
 
 	if len(errs) > 0 {
-		// TODO
+		if _, ok := errs[0].(model.UnableToRenameFileError); ok {
+			json.NewEncoder(w).Encode("Arf was unable to rename all files")
+		} else {
+			json.NewEncoder(w).Encode(errs[0].Error())
+		}
+	} else {
+		json.NewEncoder(w).Encode("Files were successfully renamed.")
 	}
 
 }
@@ -155,7 +168,13 @@ func Recover(w http.ResponseWriter, r *http.Request) {
 	errs := service.Recover(path)
 
 	if len(errs) > 0 {
-		// TODO
+		if _, ok := errs[0].(model.UnableToRenameFileError); ok {
+			json.NewEncoder(w).Encode("Arf was unable to recover all files")
+		} else {
+			json.NewEncoder(w).Encode(errs[0].Error())
+		}
+	} else {
+		json.NewEncoder(w).Encode("Successfully recovered")
 	}
 
 }

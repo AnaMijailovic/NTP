@@ -111,9 +111,9 @@ func GetFileChartData(root string, chartType string) map[string]int64 {
 		fileType, _ := getLabelFunc(path)
 		size, ok := fileTypesDict[fileType]
 		if ok {
-			fileTypesDict[fileType] = size + info.Size()
+			fileTypesDict[fileType] = size + info.Size() / 1000
 		} else {
-			fileTypesDict[fileType] = info.Size()
+			fileTypesDict[fileType] = info.Size() / 1000
 		}
 
 		return nil
@@ -184,7 +184,10 @@ func Walk(root string, recursive bool, walkFn WalkFunc) error {
 
 	// if there is no error
 	// first call walkFn for the root
-	walkFn(root, stat, nil)
+	err = walkFn(root, stat, nil)
+	if err != nil {
+		return err
+	}
 
 	// ReadDir reads the directory named by dirname
 	// and returns a list of directory entries sorted by filename.
@@ -203,9 +206,13 @@ func Walk(root string, recursive bool, walkFn WalkFunc) error {
 		}
 
 		if stat.IsDir() && recursive {
-			Walk(abs, recursive, walkFn)
+			err = Walk(abs, recursive, walkFn)
 		} else { // If it is a file
-			walkFn(abs, stat, nil)
+			err = walkFn(abs, stat, nil)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 

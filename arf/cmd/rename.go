@@ -59,7 +59,7 @@ to quickly create a Cobra application.`,
 			replaceWithFlag, patternFlag }
 
 		errs := service.Rename(&renameData)
-		PrintErrors(errs, "ARF was unable to rename the following files: ")
+		PrintErrors(errs)
 
 	},
 }

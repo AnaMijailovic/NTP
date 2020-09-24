@@ -2,6 +2,7 @@ package service
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -18,6 +19,9 @@ func Recover(recoveryFilePath string) []error {
 	defer file.Close()
 
 	errs := recoverFiles(file)
+	if len(errs) >  0 {
+		return errs
+	}
 
 	// Delete recoveryFile
 	file.Close()
@@ -38,7 +42,8 @@ func recoverFiles(file io.Reader) []error {
 		// Split next line
 		paths := strings.Split(scanner.Text(), ",")
 		if len(paths) != 2 {
-			log.Fatal("ERROR: Recovery file is invalid")
+			errs = append(errs, errors.New("ERROR: Recovery file is invalid"))
+			return errs
 		}
 		src, dest := paths[0], paths[1]
 
@@ -61,8 +66,7 @@ func recoverFiles(file io.Reader) []error {
 	}
 
 	if err := scanner.Err(); err != nil {
-
-		log.Fatal("ERROR: Recovery file is invalid")
+		errs = append(errs, errors.New("ERROR: Recovery file is invalid"))
 	}
 
 	return errs

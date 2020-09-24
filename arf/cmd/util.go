@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/AnaMijailovic/NTP/arf/model"
 	"log"
 	"os"
 	"time"
@@ -37,12 +38,15 @@ func GetPath(args []string, index int) string {
 	return path
 }
 
-func PrintErrors(errs []error, message string) {
+func PrintErrors(errs []error) {
 
 	if len(errs) > 0 {
-		fmt.Println(message)
+		_, ok := errs[0].(model.UnableToRenameFileError)
+		if ok {
+			fmt.Println("ARF was unable to move some files: ")
+		}
 		for _, err := range errs {
-			fmt.Println("Error: ", err)
+			fmt.Println(err.Error())
 		}
 	}
 }

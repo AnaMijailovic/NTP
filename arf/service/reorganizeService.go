@@ -1,10 +1,10 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"github.com/AnaMijailovic/NTP/arf/model"
 	"gopkg.in/djherbis/times.v1"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -12,15 +12,15 @@ import (
 
 func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
+	errs := make([]error, 0)
 
 	if file, err := os.Open(recoveryFilePath); err == nil {
 		file.Close()
-		log.Fatal("ERROR: ArfRecover file already exists at the destination path")
+		errs = append(errs, errors.New("ERROR: ArfRecover file already exists at the destination path"))
+		return errs
 	}
 
-	errs := make([]error, 0)
-
-	Walk(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
+	err := Walk(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -43,15 +43,20 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 
 		err = renameIfNotExists(path, newFilePath)
 
+		if err == nil {
+			err = writeRecoveryData(recoveryFilePath, path, newFilePath)
+		}
+
 		if err != nil {
 			errs = append(errs, err)
-		} else {
-			writeRecoveryData(recoveryFilePath, path, newFilePath)
 		}
 
 		return nil
 	})
 
+	if err != nil {
+		errs = append(errs, err)
+	}
 	return errs
 }
 

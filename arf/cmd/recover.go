@@ -41,7 +41,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		errs := service.Recover(args[0])
-		PrintErrors(errs, "ARF was unable to recover the following files: ")
+		PrintErrors(errs)
 
 	},
 }

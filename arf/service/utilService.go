@@ -2,10 +2,11 @@ package service
 
 import (
 	"errors"
-	"log"
+	"github.com/AnaMijailovic/NTP/arf/model"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func getFileContentType(filePath string) (string, error) {
@@ -22,7 +23,11 @@ func getFileContentType(filePath string) (string, error) {
 	// Use the net/http package's handy DectectContentType function. Always returns a valid
 	// content-type by returning "application/octet-stream" if no others seemed to match.
 	contentType := http.DetectContentType(buffer)
-	// fmt.Println(contentType)
+	contentType = strings.Split(contentType, ";")[0]
+	if strings.Contains(contentType, "application") {
+		contentType = strings.Split(contentType, "/")[1]
+	}
+
 	return contentType, nil
 }
 
@@ -48,18 +53,19 @@ func moveFile(src string, dest string) error {
 
 }
 
-func writeRecoveryData(recoveryFilePath string, src string, dest string) {
+func writeRecoveryData(recoveryFilePath string, src string, dest string) error {
 
 	// If the file doesn't exist, create it, or append to the file
 	recoveryFile, err := os.OpenFile(recoveryFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
-		log.Fatal(err)
+		return errors.New("ERROR: Invalid recovery file path")
 	}
 
 	defer recoveryFile.Close()
 
 	recoveryFile.WriteString(src + "," + dest + "\n")
+	return nil
 }
 
 func renameIfNotExists(old string, new string) error {
@@ -70,13 +76,13 @@ func renameIfNotExists(old string, new string) error {
 
 	if file, err := os.Open(new); err == nil {
 		file.Close()
-		return errors.New("The file with the same name already exists: " + new)
+		return model.UnableToRenameFileError{Err: "The file with the same name already exists: " + new}
 	}
 
 	err := os.Rename(old, new)
 
 	if err != nil {
-		return errors.New("Unable to remove: " + new)
+		return model.UnableToRenameFileError{Err: "Unable to remove: " + new}
 	}
 
 	return nil

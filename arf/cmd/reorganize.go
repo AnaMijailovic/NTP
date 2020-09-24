@@ -73,7 +73,7 @@ to quickly create a Cobra application.`,
 			fileSizeFlag, createdDateFlag}
 
 		errs := service.ReorganizeFiles(&reorganizeData)
-		PrintErrors(errs, "ARF was unable to move the following files: ")
+		PrintErrors(errs)
 	},
 }
 
