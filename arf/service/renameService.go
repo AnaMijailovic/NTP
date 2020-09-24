@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+// Renames files by given criteria.
+// Returns a slice containing eventual errors.
+// Fails and returns an error if recovery file
+// already exists at a destination path.
 func Rename(renameData *model.RenameData) []error {
 	errs := make([]error, 0)
 
@@ -60,6 +64,9 @@ func Rename(renameData *model.RenameData) []error {
 	return errs
 }
 
+// Generates a new file name according to
+// selected criteria.
+// Returns an error if criteria is not valid.
 func generateNewFileName( oldFilePath string, renameData *model.RenameData) (string, error) {
 	oldFileName := filepath.Base(oldFilePath)
 	extension := filepath.Ext(oldFilePath)
@@ -81,8 +88,10 @@ func generateNewFileName( oldFilePath string, renameData *model.RenameData) (str
 	return "", errors.New("ERROR: Invalid rename criteria")
 }
 
+// Generates a new file name based on a pattern.
+// Returns an error if pattern is not valid.
 func parsePatternString(patternStr string, oldFileName string) (string, error){
-	// var newName string
+
 	// Remove extension from file name
 	ext := filepath.Ext(oldFileName)
 	oldFileName = strings.Replace(oldFileName, ext, "", 1)
@@ -114,7 +123,6 @@ func parsePatternString(patternStr string, oldFileName string) (string, error){
 
 	}
 
-	// Check if pattern is not changed -> no {} in the pattern
 	return patternStr + ext, nil
 
 }

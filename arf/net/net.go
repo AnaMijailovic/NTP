@@ -13,7 +13,7 @@ import (
 func Serve() {
 
 	http.HandleFunc("/api/fileTree", GetFileTree)
-	http.HandleFunc("/api/fileTypeData", GetTypeChartData)
+	http.HandleFunc("/api/fileTypeData", GetChartData)
 	http.HandleFunc("/api/deleteFiles", DeleteFiles)
 	http.HandleFunc("/api/rename", RenameFiles)
 	http.HandleFunc("/api/reorganize", ReorganizeFiles)
@@ -39,7 +39,7 @@ func GetFileTree(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetTypeChartData(w http.ResponseWriter, r *http.Request) {
+func GetChartData(w http.ResponseWriter, r *http.Request) {
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
 

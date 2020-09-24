@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+// Create a tree that represents file structure.
+// Use post-order depth-first search algorithm to delete
+// all files and folders that match the selected criteria.
+// Returns the number of deleted files.
 func DeleteFiles(deleteData *model.DeleteData) *int {
 	tree := CreateTree(deleteData.Path, deleteData.Recursive)
 	filesDeleted := 0
@@ -14,6 +18,9 @@ func DeleteFiles(deleteData *model.DeleteData) *int {
 	return filesDel
 }
 
+// Post-order depth-first search algorithm to delete files.
+// Multiple criteria are connected with 'or' operator.
+// Returns the number of deleted files.
 func postorderDelete(node *model.Node, deleteData *model.DeleteData, filesDeleted *int) *int {
 
 	for _, file := range node.Children {

@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+// Reorganizes files by given criteria.
+// Returns a slice containing eventual errors.
+// Fails and returns an error if recovery file
+// already exists at a destination path.
 func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
 	errs := make([]error, 0)
@@ -60,6 +64,8 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 	return errs
 }
 
+// Generates a new folder name according to
+// selected criteria.
 func generateFolderName(path string, reorganizeData *model.ReorganizeData) string {
 	if reorganizeData.FileType {
 		return generateFolderNameByType(path)
@@ -70,11 +76,17 @@ func generateFolderName(path string, reorganizeData *model.ReorganizeData) strin
 	}
 }
 
+// The folder name is the file type.
+// Path is the absolute path to the file
+// whose type is retrieved.
 func generateFolderNameByType(path string) string {
 	fileType, _ := getFileContentType(path)
 	return fileType
 }
 
+// The folder name is the file size range (in MB).
+// Path is the absolute path to the file
+// whose size is retrieved.
 func generateFolderNameBySize(path string, step int64) string {
 	var label string
 	stat, _ := os.Stat(path)
@@ -91,6 +103,12 @@ func generateFolderNameBySize(path string, step int64) string {
 	return label
 }
 
+// The folder name is the creation date.
+// It can be full date, month and year or just year,
+// which is determined by the dateType.
+// Valid values for dateType are 'd', 'm' and 'y'.
+// Path is the absolute path to the file
+// whose creation date is retrieved.
 func generateFolderNameByDate(path string, dateType string) string {
 
 	timeStat, _ := times.Stat(path)

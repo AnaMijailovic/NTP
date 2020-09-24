@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// Undoes rename/reorganize operations.
+// Deletes the recovery file at the end
 func Recover(recoveryFilePath string) []error {
 
 	file, err := os.Open(recoveryFilePath)
@@ -33,6 +35,13 @@ func Recover(recoveryFilePath string) []error {
 	return errs
 }
 
+// Reads recovery file line by line
+// and moves files to the old path.
+// Recovery file is a CSV file containing
+// old path and new path.
+// Deletes directories that remain empty after moving files.
+// If moving a file fails, it generates an error
+// and returns a slice of errors that happened.
 func recoverFiles(file io.Reader) []error {
 	errs := make([]error, 0)
 	scanner := bufio.NewScanner(file)
@@ -61,8 +70,6 @@ func recoverFiles(file io.Reader) []error {
 				os.Remove(filepath.Dir(dest))
 			}
 		}
-
-
 	}
 
 	if err := scanner.Err(); err != nil {

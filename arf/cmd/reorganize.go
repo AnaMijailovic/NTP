@@ -23,13 +23,14 @@ import (
 // reorganizeCmd represents the reorganize command
 var reorganizeCmd = &cobra.Command {
 
-	Use:   "reorganize",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "reorganize [sourcePath] [destinationPath]",
+	Short: "Reorganizes files by given criteria",
+	Long: `Reorganizes all files (recursively or not) in the given path 
+by the given criteria.
+If no paths are specified, the current directory path will be used
+both as a source and as a destination.
+Changes are saved in a recovery file that can be later used to restore 
+the original organization. (look at 'recover' command)`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 0 && len(args) != 2 {
 			return errors.New("you must provide source and destination paths")
@@ -83,7 +84,7 @@ func init() {
 	reorganizeCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
 	reorganizeCmd.Flags().BoolP("fileType", "t", false, "Reorganize by file types")
 	reorganizeCmd.Flags().Int64P("fileSize", "s", 0,
-		"Reorganize by file size")
+		"Reorganize by file size; uses given size (in MB) as a step")
 	reorganizeCmd.Flags().StringP("createdDate", "c", "",
-		"Reorganize by file creation time")
+		"Reorganize by file creation time - y (year); m (month); d(day)")
 }

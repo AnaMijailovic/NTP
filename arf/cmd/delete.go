@@ -22,20 +22,18 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "delete [path]",
+	Short: "Deletes files and folders by given criteria",
+	Long: `Deletes all files and folders in the given path (recursively or not)
+that match the selected criteria. 
+Multiple criteria are connected with 'or' operator.`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		return CheckPaths(args)
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// get path
+		// Get path
 		path := GetPath(args, 0)
 
 		// Get flag values
@@ -53,6 +51,7 @@ to quickly create a Cobra application.`,
 			log.Fatal("ERROR: You must provide a deletion criteria")
 		}
 
+		// Delete
 		deleteData := model.DeleteData{path, recursiveFlag, emptyFlag, cbTime,
 			naTime}
 		filesDeleted := service.DeleteFiles( &deleteData )
@@ -64,10 +63,11 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
+	// Set local flags
 	deleteCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
 	deleteCmd.Flags().BoolP("empty", "e", false, "Delete empty files")
 	deleteCmd.Flags().StringP("createdBefore", "b", "",
-		"Delete files created before the given date")
+		"Delete files created before the given date (dd-mm-yyyy)")
 	deleteCmd.Flags().StringP("notAccessedAfter", "a", "",
-		"Delete files not accessed after the given date")
+		"Delete files not accessed after the given date (dd-mm-yyyy)")
 }

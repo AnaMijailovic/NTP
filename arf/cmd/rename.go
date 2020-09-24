@@ -21,13 +21,13 @@ import (
 
 // renameCmd represents the rename command
 var renameCmd = &cobra.Command{
-	Use:   "rename",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "rename [path]",
+	Short: "Renames files by given criteria",
+	Long: `Renames all files (recursively or not) in the given path 
+by the given criteria. 
+If no path is specified, the current directory path will be used.
+Changes are saved in a recovery file that can be later used to restore 
+the original names. (look at 'recover' command)`,
 	Args: func(cmd *cobra.Command, args []string) error {
 
 		return CheckPaths(args)
@@ -55,6 +55,7 @@ to quickly create a Cobra application.`,
 			log.Fatal("ERROR: You must provide exactly one rename criteria")
 		}
 
+		// Rename
 		renameData := model.RenameData{path, recursiveFlag, randomFlag, removeFlag,
 			replaceWithFlag, patternFlag }
 
@@ -67,6 +68,7 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(renameCmd)
 
+	// Set local flags
 	renameCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
 	renameCmd.Flags().BoolP("random", "n", false, "Generate random new names")
 	renameCmd.Flags().StringP("remove", "m", "",
