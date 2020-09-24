@@ -44,7 +44,7 @@ ArfInformationDialog >> initializeWindow: aWindowPresenter [
 	
 	aWindowPresenter 
 		title: 'Information Dialog';
-		initialExtent: 300@220;
+		initialExtent: 370@220;
 		centered
 ]
 

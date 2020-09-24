@@ -129,5 +129,5 @@ ArfDeletePresenter >> submitDelete [
 		do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
 			
    content := response contents. 
-	ArfInformationDialog new message: content asString; openModalWithSpec.
+	ArfInformationDialog new message: content; openModalWithSpec.
 ]
