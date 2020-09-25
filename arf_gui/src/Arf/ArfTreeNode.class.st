@@ -1,3 +1,6 @@
+"
+Class the represents a tree node.
+"
 Class {
 	#name : #ArfTreeNode,
 	#superclass : #Object,
@@ -5,7 +8,7 @@ Class {
 		'element',
 		'children'
 	],
-	#category : #Arf
+	#category : #'Arf-model'
 }
 
 { #category : #accessing }

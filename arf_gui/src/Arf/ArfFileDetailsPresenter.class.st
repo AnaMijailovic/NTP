@@ -1,3 +1,7 @@
+"
+Presenter for showing details about the selected file.
+
+"
 Class {
 	#name : #ArfFileDetailsPresenter,
 	#superclass : #SpPresenterWithModel,
@@ -12,7 +16,7 @@ Class {
 		'accessedLabel',
 		'file'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #specs }
@@ -45,8 +49,9 @@ ArfFileDetailsPresenter >> copyToClipboard [
 	self inform: self model fullPath,' copied to clipboard'
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'fill presenter' }
 ArfFileDetailsPresenter >> fillPresenterWithModel [
+
 	| cDate mDate aDate |
 	
 	cDate := self model created asDate printFormat: #(1 2 3 $- 1 1 ) .
@@ -74,6 +79,7 @@ ArfFileDetailsPresenter >> initialize [
 
 { #category : #initialization }
 ArfFileDetailsPresenter >> initializeDialogWindow: aDialog [
+
 	aDialog
 		closeOnBackdropClick: false;
 		addButton: 'Copy path'

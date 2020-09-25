@@ -1,3 +1,6 @@
+"
+Presenter for recover functionality.
+"
 Class {
 	#name : #ArfRecoverPresenter,
 	#superclass : #SpPresenter,
@@ -5,15 +8,15 @@ Class {
 		'pathInput',
 		'recoverBtn'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #initialization }
 ArfRecoverPresenter class >> defaultLayout [
 		^ SpBoxLayout  newVertical
-			add: '' withConstraints: [ :c | c height: 25];
 			add: 'Recovery file path:' withConstraints: [ :c | c height: 25];
-			add: #pathInput ;
+			add: #pathInput withConstraints: [ :c | c height: 25];
+			add: '';
 			add: #recoverBtn withConstraints: [ :c | c height: 40];
 			yourself. 
 
@@ -27,7 +30,7 @@ ArfRecoverPresenter class >> defaultSpec [
 
 { #category : #initialization }
 ArfRecoverPresenter >> initializePresenters [
-	pathInput := self newTextInput autoAccept: true.
+	pathInput := ArfChooseFilePresenter new.
 	
 	recoverBtn := self newButton label: 'Recover'.
 	recoverBtn action: [ self submitRecover ].
@@ -37,21 +40,8 @@ ArfRecoverPresenter >> initializePresenters [
 ArfRecoverPresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Recover';
-		initialExtent: 300@200;
+		initialExtent: 300@160;
 		centered
-]
-
-{ #category : #accessing }
-ArfRecoverPresenter >> path [ 
-	|path isValidPath |
-
-	path := pathInput text.
-	path = '' ifTrue: [ self error: 'You must enter a path' ]. 
-	
-	isValidPath := path asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Path is invalid' ] .
-	
-	^ path
 ]
 
 { #category : #submit }
@@ -59,7 +49,7 @@ ArfRecoverPresenter >> submitRecover [
 	
 	| path response content|
 	
-	[path := self path ]
+	[path := pathInput path ]
   			on: Error
   			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
 				

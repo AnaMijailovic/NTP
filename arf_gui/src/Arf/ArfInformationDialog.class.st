@@ -1,10 +1,13 @@
+"
+Dialog for showing messages and errors.
+"
 Class {
 	#name : #ArfInformationDialog,
 	#superclass : #SpPresenter,
 	#instVars : [
 		'message'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #initialization }
@@ -24,6 +27,7 @@ ArfInformationDialog class >> defaultSpec [
 
 { #category : #initialization }
 ArfInformationDialog >> initializeDialogWindow: aDialog [
+
 	aDialog
 		closeOnBackdropClick: false;
 		addButton: 'Ok'

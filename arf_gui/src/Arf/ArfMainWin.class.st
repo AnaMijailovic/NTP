@@ -1,9 +1,13 @@
+"
+Main window of the application, used for showing tree view and charts.
+"
 Class {
 	#name : #ArfMainWin,
 	#superclass : #SpPresenterWithModel,
 	#instVars : [
 		'menu',
 		'pathInput',
+		'chooseFileBtn',
 		'chartBtns',
 		'treeViewBtn',
 		'pieChartBtn',
@@ -16,7 +20,7 @@ Class {
 		'showBtn',
 		'chart'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #initialization }
@@ -25,7 +29,8 @@ ArfMainWin class >> defaultLayout [
 			add:  #menu withConstraints: [ :constraints | constraints height: self toolbarHeight ];
 			add: (SpBoxLayout newHorizontal 
 						add: 'Load from: ' withConstraints: [ : constraints | constraints height: 25 ];
-		   				add: #pathInput expand: true fill: true padding: 10) expand: false fill: false                               padding: 10;
+		   				add: #pathInput expand: true fill: true padding: 10) expand: false fill: false padding: 10;
+					
 			add: ( SpBoxLayout newHorizontal
 					   add: ( SpBoxLayout newVertical 
 							add: #treeViewBtn withConstraints: [ :constraints | constraints height: 25];
@@ -39,7 +44,7 @@ ArfMainWin class >> defaultLayout [
 							add: ' '  withConstraints: [ :constraints | constraints height: 25];
 							add: #showBtn expand: false fill: false padding: 25) 
 					expand: false fill: false padding: 30;
-					 		add: #chart expand: true fill: true padding: 10
+					 		add: #chart expand: true fill: true padding: 1
 							);
 					
 			yourself. 
@@ -112,7 +117,7 @@ ArfMainWin >> drawTreeView: canvas path: path [
 	canvas color: '1ced1cccc'.
 	createShape := [ :node | 
 	| ellipse group label |
-	ellipse := ArfEllipse new
+	ellipse := RSEllipse new
 		model: node;
 		color: (Color blue alpha: 0.7);
 		size: 25;
@@ -120,7 +125,7 @@ ArfMainWin >> drawTreeView: canvas path: path [
 			"contextMenu: self mainMenu;"
 			when: RSMouseDoubleClick
 			do: [ :evt | ArfFileDetailsPresenter new model: node element; openModalWithSpec ];
-		yourself.	"Show additional informations about the file"
+		yourself.	
 	group := RSGroup new.
 	label := RSLabel new
 		text: node element name;
@@ -198,14 +203,15 @@ tree := (NeoJSONReader on: content readStream)
 
 { #category : #initialization }
 ArfMainWin >> initializePresenters [
+
 	menu := self mainMenu.
-	pathInput := self newTextInput autoAccept: true.
+	pathInput := ArfChooseFilePresenter new.
+
 	showBtn := self newButton label: 'Show'.
-	
+	                          
 	chart := self instantiate: SpRoassalPresenter.
    chart script: [ :canvas | self renderChart: canvas].
-
-		
+	
 	treeViewBtn := self newRadioButton label: 'Tree View'.
 	pieChartBtn := self newRadioButton label: 'Pie Chart'.
 	barChartBtn := self newRadioButton label: 'Bar Chart'.
@@ -264,19 +270,6 @@ ArfMainWin >> mainMenu [
 	^ aMenu 
 ]
 
-{ #category : #accessing }
-ArfMainWin >> path [ 
-	|path isValidPath |
-
-	path := pathInput text.
-	path = '' ifTrue: [ self error: 'You must enter a path' ]. 
-	
-	isValidPath := path asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Path is invalid' ] .
-	
-	^ path
-]
-
 { #category : #rendering }
 ArfMainWin >> renderChart: canvas [ 
 	canvas color: '6b6a66'.
@@ -284,10 +277,12 @@ ArfMainWin >> renderChart: canvas [
 
 { #category : #'canvas drawing' }
 ArfMainWin >> showChart [
+
 	| str chartType enteredPath |
+
 	str := ( chartBtns associations detect: [ :each | each value state ]) key.
 	chartType := ( chartTypeBtns  associations detect: [ :each | each value state ]) key.
-	[enteredPath := self path ]
+	[enteredPath := pathInput path ]
   			on: Error
   			do: [ :ex| ArfInformationDialog new message: ex messageText; openModalWithSpec. ^ self] .
 

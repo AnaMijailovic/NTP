@@ -1,5 +1,8 @@
+"
+Application
+"
 Class {
 	#name : #Arf,
 	#superclass : #SpApplication,
-	#category : #Arf
+	#category : #'Arf-presenters'
 }

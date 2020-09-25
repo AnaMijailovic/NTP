@@ -1,3 +1,6 @@
+"
+Class the represents a file.
+"
 Class {
 	#name : #ArfFile,
 	#superclass : #Object,
@@ -11,7 +14,7 @@ Class {
 		'modified',
 		'accessed'
 	],
-	#category : #Arf
+	#category : #'Arf-model'
 }
 
 { #category : #accessing }

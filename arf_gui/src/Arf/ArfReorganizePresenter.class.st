@@ -1,3 +1,6 @@
+"
+Presenter for reorganize functionality.
+"
 Class {
 	#name : #ArfReorganizePresenter,
 	#superclass : #SpPresenterWithModel,
@@ -14,7 +17,7 @@ Class {
 		'reorganizeTypeBtns',
 		'submitBtn'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #specs }
@@ -58,19 +61,6 @@ ArfReorganizePresenter >> creationDate [
 ]
 
 { #category : #accessing }
-ArfReorganizePresenter >> destPath [ 
-	|destPath isValidPath |
-
-	destPath := destPathInput text.
-	destPath = '' ifTrue: [ self error: 'You must enter a destination path' ]. 
-	
-	isValidPath := destPath asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Destination path is invalid' ] .
-	
-	^ destPath 
-]
-
-{ #category : #accessing }
 ArfReorganizePresenter >> fileSize [
    | fileSize reorganizeBy |
 
@@ -84,8 +74,8 @@ ArfReorganizePresenter >> fileSize [
 
 { #category : #initialization }
 ArfReorganizePresenter >> initializePresenters [
-	srcPathInput := self newTextInput autoAccept: true.
-	destPathInput := self newTextInput autoAccept: true.
+	srcPathInput := ArfChooseFilePresenter new.
+	destPathInput := ArfChooseFilePresenter new.
 	
 	recursiveCheckBox := self newCheckBox label: 'Recursive'.
 	
@@ -118,19 +108,6 @@ ArfReorganizePresenter >> initializeWindow: aWindowPresenter [
 		centered
 ]
 
-{ #category : #accessing }
-ArfReorganizePresenter >> srcPath [ 
-	|srcPath isValidPath |
-
-	srcPath := srcPathInput text.
-	srcPath = '' ifTrue: [ self error: 'You must enter a source path' ]. 
-	
-	isValidPath := srcPath asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Source path is invalid' ] .
-	
-	^ srcPath 
-]
-
 { #category : #submit }
 ArfReorganizePresenter >> submitReorganize [
 	
@@ -142,8 +119,8 @@ ArfReorganizePresenter >> submitReorganize [
 	fileType := reorganizeBy = 'fileType'. 
 	
 	[fileSize := self fileSize .
-	 srcPath := self srcPath .
-	 destPath := self destPath.
+	 srcPath := srcPathInput  srcPath .
+	 destPath := destPathInput destPath.
 	 creationDate := self creationDate.]
   			on: Error
   			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .

@@ -1,3 +1,6 @@
+"
+Form for delete functionality.
+"
 Class {
 	#name : #ArfDeletePresenter,
 	#superclass : #SpPresenterWithModel,
@@ -11,7 +14,7 @@ Class {
 		'accessedDateInput',
 		'submitBtn'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #initialization }
@@ -46,7 +49,7 @@ ArfDeletePresenter >> createdBefore [
 
 { #category : #initialization }
 ArfDeletePresenter >> initializePresenters [
-	pathInput := self newTextInput autoAccept: true.
+	pathInput := ArfChooseFilePresenter new.
 	
 	recursiveCheckBox := self newCheckBox label: 'Recursive'.
 	
@@ -80,19 +83,6 @@ ArfDeletePresenter >> notAccessedAfter [
 	^ notAccessedAfter 
 ]
 
-{ #category : #accessing }
-ArfDeletePresenter >> path [ 
-	|path isValidPath |
-
-	path := pathInput text.
-	path = '' ifTrue: [ self error: 'You must enter a path' ]. 
-	
-	isValidPath := path asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Path is invalid' ] .
-	
-	^ path
-]
-
 { #category : #initialization }
 ArfDeletePresenter >> submitDelete [
 	| enteredPath recursive empty createdBefore notAccessedAfter response content |
@@ -103,7 +93,7 @@ ArfDeletePresenter >> submitDelete [
 	createdBefore := self createdBefore  .
 	notAccessedAfter := self notAccessedAfter .
 	
-	[enteredPath := self path ]
+	[enteredPath := pathInput path ]
   			on: Error
   			do: [ :ex| ArfInformationDialog new message: ex messageText; openModalWithSpec. ^ self] .
 	

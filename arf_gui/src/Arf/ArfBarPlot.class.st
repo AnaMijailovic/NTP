@@ -1,15 +1,22 @@
+"
+Inherits RSBarPlot class, overrides its renderIn: method
+and enables showing x labels.
+
+
+"
 Class {
 	#name : #ArfBarPlot,
 	#superclass : #RSBarPlot,
 	#instVars : [
 		'xLabels'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #rendering }
 ArfBarPlot >> renderIn: canvas [
 	| color width myScale label composite| 
+	
 	self checkAssertion.
 	color := self computeColor.
    "myScale := self barScale."
@@ -23,6 +30,8 @@ ArfBarPlot >> renderIn: canvas [
 		corner := origin x @ (yScale scale: 0).
 		((self isPointWellDefined: origin) and: [ self isPointWellDefined: corner ]) ifTrue: [
 			r := Rectangle origin: origin corner: corner + (width@0).
+			
+			"Show x label"
 			label := RSLabel new text: (xLabels at: i) ; fontSize: 5.
 	    
 			composite := RSComposite new.

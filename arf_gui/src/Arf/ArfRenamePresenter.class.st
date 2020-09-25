@@ -1,3 +1,6 @@
+"
+Presenter for rename functionality.
+"
 Class {
 	#name : #ArfRenamePresenter,
 	#superclass : #SpPresenterWithModel,
@@ -15,7 +18,7 @@ Class {
 		'renameTypeBtns',
 		'submitBtn'
 	],
-	#category : #Arf
+	#category : #'Arf-presenters'
 }
 
 { #category : #initialization }
@@ -46,7 +49,7 @@ ArfRenamePresenter class >> defaultSpec [
 
 { #category : #initialization }
 ArfRenamePresenter >> initializePresenters [
-	pathInput := self newTextInput autoAccept: true.
+	pathInput := ArfChooseFilePresenter new.
 	
 	recursiveCheckBox := self newCheckBox label: 'Recursive'.
 	
@@ -82,19 +85,6 @@ ArfRenamePresenter >> initializeWindow: aWindowPresenter [
 		title: 'Rename';
 		initialExtent: 300@500; "default size"
 		centered
-]
-
-{ #category : #accessing }
-ArfRenamePresenter >> path [ 
-	|path isValidPath |
-
-	path := pathInput text.
-	path = '' ifTrue: [ self error: 'You must enter a path' ]. 
-	
-	isValidPath := path asFileReference.
-	isValidPath exists ifFalse: [ self error: 'Path is invalid' ] .
-	
-	^ path
 ]
 
 { #category : #accessing }
@@ -146,7 +136,7 @@ ArfRenamePresenter >> submitRename [
 	remove := self removePart.
 	replaceWith := self replaceWith.
 	
-	[path := self path.
+	[path := pathInput path.
 	 pattern := self pattern ]
   			on: Error
   			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .

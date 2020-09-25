@@ -1,10 +1,13 @@
+"
+Class the represents a tree.
+"
 Class {
 	#name : #ArfTree,
 	#superclass : #Object,
 	#instVars : [
 		'root'
 	],
-	#category : #Arf
+	#category : #'Arf-model'
 }
 
 { #category : #converting }
