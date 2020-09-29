@@ -49,6 +49,9 @@ ArfRecoverPresenter >> submitRecover [
 	
 	| path response content|
 	
+	path := ''.
+	response := nil.
+	
 	[path := pathInput path ]
   			on: Error
   			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .
@@ -63,7 +66,4 @@ ArfRecoverPresenter >> submitRecover [
 			
    content := response contents. 
 	ArfInformationDialog new message: content asString; openModalWithSpec.
-				
-	
-	self inform: 'Submit', path
 ]

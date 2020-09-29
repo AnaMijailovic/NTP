@@ -119,8 +119,8 @@ ArfReorganizePresenter >> submitReorganize [
 	fileType := reorganizeBy = 'fileType'. 
 	
 	[fileSize := self fileSize .
-	 srcPath := srcPathInput  srcPath .
-	 destPath := destPathInput destPath.
+	 srcPath := srcPathInput path .
+	 destPath := destPathInput path.
 	 creationDate := self creationDate.]
   			on: Error
   			do: [ :ex| ArfInformationDialog  new message: ex messageText; openModalWithSpec. ^ self] .

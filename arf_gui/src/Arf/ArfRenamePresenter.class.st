@@ -128,7 +128,7 @@ ArfRenamePresenter >> replaceWith [
 ArfRenamePresenter >> submitRename [
 	
 	| path recursive renameBy random remove replaceWith pattern content response|
-
+	
 	recursive := recursiveCheckBox state asString.
 	
 	renameBy  := ( renameTypeBtns associations detect: [ :each | each value state ]) key.

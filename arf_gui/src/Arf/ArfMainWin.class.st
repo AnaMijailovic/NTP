@@ -15,8 +15,11 @@ Class {
 		'chartTypeBtns',
 		'fileTypesBtn',
 		'creationDateBtn',
+		'creationMonthBtn',
 		'accessedDateBtn',
+		'accessedMonthBtn',
 		'modifiedDateBtn',
+		'modifiedMonthBtn',
 		'showBtn',
 		'chart'
 	],
@@ -39,8 +42,11 @@ ArfMainWin class >> defaultLayout [
 					      add: ' '  withConstraints: [ :constraints | constraints height: 15];
 						   add: #fileTypesBtn  withConstraints: [ :constraints | constraints height: 25];
 			       		add: #creationDateBtn  withConstraints: [ :constraints | constraints height: 25];
+					      add: #creationMonthBtn  withConstraints: [ :constraints | constraints height: 25];
 			       		add: #accessedDateBtn withConstraints: [ :constraints | constraints height: 25];
+					      add: #accessedMonthBtn withConstraints: [ :constraints | constraints height: 25];
 							add: #modifiedDateBtn withConstraints: [ :constraints | constraints height: 25];
+							add: #modifiedMonthBtn withConstraints: [ :constraints | constraints height: 25];	
 							add: ' '  withConstraints: [ :constraints | constraints height: 25];
 							add: #showBtn expand: false fill: false padding: 25) 
 					expand: false fill: false padding: 30;
@@ -86,8 +92,12 @@ ArfMainWin >> drawPieChart: canvas path: path chartType: chartType [
 
 	| pie pieLabel data |
 	
-	data := ( self getChartData: path chartType: chartType ) associations.
-
+	[ data := self getChartData: path chartType: chartType ]
+		on: ConnectionTimedOut 
+		do: [ :ex| ArfInformationDialog  new message: ex messageText ; openModalWithSpec. ^ self] .
+	
+	data := data associations. 
+	
 	pie := RSPie new
 		container: canvas;
 		objects: data;
@@ -158,9 +168,10 @@ ArfMainWin >> getChartData: path chartType: chartType [
    		url: 'http://localhost:8080/api/fileTypeData';
 		queryAt: 'path' put: path;
 		queryAt: 'chartType' put: chartType;
-		ifFail: [ :ex | self inform: ex printString ];
+		"ifFail: [ :ex | self inform: ex printString ];"
    		get;
    		response.
+		
 content := response contents.
 
 response isSuccess
@@ -202,12 +213,35 @@ tree := (NeoJSONReader on: content readStream)
 ]
 
 { #category : #initialization }
+ArfMainWin >> initializeChartTypeBtns [
+
+	fileTypesBtn := self newRadioButton label: 'File Types'.
+	creationDateBtn  := self newRadioButton label: 'Creation Date - year'.
+	accessedDateBtn  := self newRadioButton label: 'Accessed Date - year'.
+	modifiedDateBtn  := self newRadioButton label: 'Modified Date - year'.
+	creationMonthBtn  := self newRadioButton label: 'Creation Date - month'.
+	accessedMonthBtn  := self newRadioButton label: 'Accessed Date - month'.
+	modifiedMonthBtn  := self newRadioButton label: 'Modified Date - month'.
+	
+	fileTypesBtn associatedRadioButtons: { creationDateBtn . accessedDateBtn . modifiedDateBtn .
+	                                       creationMonthBtn . accessedMonthBtn . modifiedMonthBtn }.
+	chartTypeBtns := Dictionary newFrom: { (#fileType -> fileTypesBtn ) . 
+	                                   (#createdDate  -> creationDateBtn ) .
+												 (#accessedDate  -> accessedDateBtn ) .
+												 (#modifiedDate -> modifiedDateBtn ) .
+												 (#createdDateM  -> creationMonthBtn ) .
+												 (#accessedDateM  -> accessedMonthBtn ) .
+												 (#modifiedDateM -> modifiedMonthBtn ) .}.
+]
+
+{ #category : #initialization }
 ArfMainWin >> initializePresenters [
 
 	menu := self mainMenu.
 	pathInput := ArfChooseFilePresenter new.
 
-	showBtn := self newButton label: 'Show'.
+	showBtn := self newButton label: 'Show';
+		                       action: [ self showChart ] .
 	                          
 	chart := self instantiate: SpRoassalPresenter.
    chart script: [ :canvas | self renderChart: canvas].
@@ -219,17 +253,10 @@ ArfMainWin >> initializePresenters [
 	chartBtns := Dictionary newFrom: { (#treeViewBtn -> treeViewBtn ) . 
 	                                   (#pieChartBtn -> pieChartBtn ) .
 												 (#barChartBtn -> barChartBtn ) }. 
+												
+	self initializeChartTypeBtns
 	
-	fileTypesBtn := self newRadioButton label: 'File Types'.
-	creationDateBtn  := self newRadioButton label: 'Creation Date'.
-	accessedDateBtn  := self newRadioButton label: 'Accessed Date'.
-	modifiedDateBtn  := self newRadioButton label: 'Modified Date'.
-	fileTypesBtn associatedRadioButtons: { creationDateBtn . accessedDateBtn. modifiedDateBtn }.
-	chartTypeBtns := Dictionary newFrom: { (#fileType -> fileTypesBtn ) . 
-	                                   (#createdDate  -> creationDateBtn ) .
-												 (#accessedDate  -> accessedDateBtn ) .
-												 (#modifiedDate -> modifiedDateBtn )}.
-	showBtn action: [ self showChart ] 
+
 ]
 
 { #category : #initialization }

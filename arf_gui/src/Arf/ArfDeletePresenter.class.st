@@ -105,7 +105,7 @@ ArfDeletePresenter >> submitDelete [
 				 ]
 			 ]
 		] .
-	
+
 	[response := (ZnClient new)
    		url: 'http://localhost:8080/api/deleteFiles';
 		queryAt: 'path' put: enteredPath ;
