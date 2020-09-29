@@ -81,7 +81,7 @@ the original organization. (look at 'recover' command)`,
 func init() {
 	rootCmd.AddCommand(reorganizeCmd)
 
-	reorganizeCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
+	reorganizeCmd.Flags().BoolP("recursive", "r", false, "Recursive or not (default: false)")
 	reorganizeCmd.Flags().BoolP("fileType", "t", false, "Reorganize by file types")
 	reorganizeCmd.Flags().Int64P("fileSize", "s", 0,
 		"Reorganize by file size; uses given size (in MB) as a step")

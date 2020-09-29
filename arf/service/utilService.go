@@ -11,7 +11,7 @@ import (
 
 
 // Returns a file content type.
-// Use the net/http package's DetectContentType
+// Uses the net/http package's DetectContentType
 func getFileContentType(filePath string) (string, error) {
 	out, err := os.Open(filePath)
 	if err != nil {

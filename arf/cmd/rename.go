@@ -69,7 +69,7 @@ func init() {
 	rootCmd.AddCommand(renameCmd)
 
 	// Set local flags
-	renameCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
+	renameCmd.Flags().BoolP("recursive", "r", false, "Recursive or not (default: false)")
 	renameCmd.Flags().BoolP("random", "n", false, "Generate random new names")
 	renameCmd.Flags().StringP("remove", "m", "",
 		"Remove a given part of the file name")

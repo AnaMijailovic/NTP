@@ -15,8 +15,10 @@ import (
 // Fails and returns an error if recovery file
 // already exists at a destination path.
 func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
-	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
 	errs := make([]error, 0)
+
+	// Check if recovery file already exists at a destination path
+	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
 
 	if file, err := os.Open(recoveryFilePath); err == nil {
 		file.Close()
@@ -24,7 +26,8 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 		return errs
 	}
 
-	err := Walk(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
+	// Walk func which will be called for each file
+	walkFn :=  func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -33,7 +36,6 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 		newFolderName = strings.Replace(newFolderName, "/", "_", -1)
 
 		newFolderPath := reorganizeData.Dest + string(os.PathSeparator) + newFolderName
-
 		// check if directory already exists
 		if _, err := os.Open(newFolderPath); err != nil {
 			err := os.Mkdir(newFolderPath, 0755)
@@ -52,16 +54,17 @@ func ReorganizeFiles(reorganizeData *model.ReorganizeData) []error {
 		}
 
 		if err != nil {
-			errs = append(errs, err)
+			return err
 		}
 
 		return nil
-	})
-
-	if err != nil {
-		errs = append(errs, err)
 	}
-	return errs
+
+	// Call walk function
+	walk := Walk{ root: reorganizeData.Src, recursive: reorganizeData.Recursive, walkFn: walkFn, poolSize: 5 }
+	walkErrs := walk.startWalking()
+
+	return walkErrs
 }
 
 // Generates a new folder name according to
@@ -80,13 +83,15 @@ func generateFolderName(path string, reorganizeData *model.ReorganizeData) strin
 // Path is the absolute path to the file
 // whose type is retrieved.
 func generateFolderNameByType(path string) string {
-	fileType, _ := getFileContentType(path)
+	fileType, err := getFileContentType(path)
+	if err != nil {
+		return "Unknown type"
+	}
 	return fileType
 }
 
 // The folder name is the file size range (in MB).
-// Path is the absolute path to the file
-// whose size is retrieved.
+// Path is the absolute path to the file whose size is retrieved.
 func generateFolderNameBySize(path string, step int64) string {
 	var label string
 	stat, _ := os.Stat(path)
@@ -123,4 +128,58 @@ func generateFolderNameByDate(path string, dateType string) string {
 	}
 
 	return folderName
+}
+
+// Serial version
+// Reorganizes files by given criteria.
+// Returns a slice containing eventual errors.
+// Fails and returns an error if recovery file
+// already exists at a destination path.
+func ReorganizeFilesS(reorganizeData *model.ReorganizeData) []error {
+	recoveryFilePath := reorganizeData.Dest + string(os.PathSeparator) + "arfRecover.txt"
+	errs := make([]error, 0)
+
+	if file, err := os.Open(recoveryFilePath); err == nil {
+		file.Close()
+		errs = append(errs, errors.New("ERROR: ArfRecover file already exists at the destination path"))
+		return errs
+	}
+
+	err := WalkS(reorganizeData.Src, reorganizeData.Recursive, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		newFolderName := generateFolderName(path, reorganizeData)
+		newFolderName = strings.Replace(newFolderName, "/", "_", -1)
+
+		newFolderPath := reorganizeData.Dest + string(os.PathSeparator) + newFolderName
+		// check if directory already exists
+		if _, err := os.Open(newFolderPath); err != nil {
+			err := os.Mkdir(newFolderPath, 0755)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		// Move a file
+		newFilePath :=  newFolderPath + string(os.PathSeparator) + info.Name()
+
+		err = renameIfNotExists(path, newFilePath)
+
+		if err == nil {
+			err = writeRecoveryData(recoveryFilePath, path, newFilePath)
+		}
+
+		if err != nil {
+			errs = append(errs, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		errs = append(errs, err)
+	}
+	return errs
 }

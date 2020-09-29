@@ -77,7 +77,6 @@ func DeleteFiles(w http.ResponseWriter, r *http.Request) {
 	deleteData := model.DeleteData{path, recursive, empty, createdBefore,
 		notAccessedAfter}
 
-	fmt.Println(deleteData)
 	filesDeleted := service.DeleteFiles(&deleteData)
 
 	json.NewEncoder(w).Encode("Deleted " + strconv.FormatInt(int64(*filesDeleted),10 )+ " files")
@@ -106,7 +105,6 @@ func ReorganizeFiles(w http.ResponseWriter, r *http.Request) {
 	reorganizeData := model.ReorganizeData{src, dest, recursive,
 		fileType, fileSize, createdDate}
 
-	fmt.Println(reorganizeData)
 	errs := service.ReorganizeFiles(&reorganizeData)
 
 	if len(errs) > 0 {
@@ -144,7 +142,6 @@ func RenameFiles(w http.ResponseWriter, r *http.Request) {
 	renameData := model.RenameData{path, recursive, random,
 		remove, replaceWith, pattern}
 
-	fmt.Println(renameData)
 	errs := service.Rename(&renameData)
 
 	if len(errs) > 0 {
@@ -164,7 +161,6 @@ func Recover(w http.ResponseWriter, r *http.Request) {
 	keys, _ := r.URL.Query()["path"]
 	path := keys[0]
 
-	fmt.Println(path)
 	errs := service.Recover(path)
 
 	if len(errs) > 0 {

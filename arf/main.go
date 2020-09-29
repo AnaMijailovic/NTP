@@ -12,7 +12,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/AnaMijailovic/NTP/arf/cmd"
+import (
+	"github.com/AnaMijailovic/NTP/arf/cmd"
+)
 
 func main() {
 	cmd.Execute()

@@ -54,6 +54,7 @@ Multiple criteria are connected with 'or' operator.`,
 		// Delete
 		deleteData := model.DeleteData{path, recursiveFlag, emptyFlag, cbTime,
 			naTime}
+
 		filesDeleted := service.DeleteFiles( &deleteData )
 		fmt.Println("Deleted files: ", *filesDeleted)
 
@@ -64,7 +65,7 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 
 	// Set local flags
-	deleteCmd.Flags().BoolP("recursive", "r", false, "Recursive or not")
+	deleteCmd.Flags().BoolP("recursive", "r", false, "Recursive or not (default: false)")
 	deleteCmd.Flags().BoolP("empty", "e", false, "Delete empty files")
 	deleteCmd.Flags().StringP("createdBefore", "b", "",
 		"Delete files created before the given date (dd-mm-yyyy)")
