@@ -62,11 +62,11 @@ func recoverFiles(file io.Reader) []error {
 		}
 
 		// Delete destination directory if it is empty
-		file, err := os.Stat(filepath.Dir(dest))
+		_, err = os.Stat(filepath.Dir(dest))
 		if err != nil {
 			errs = append(errs, err)
 		} else {
-			if file.Size() == 0 {
+			if empty,_ := IsEmpty(filepath.Dir(dest)); empty {
 				os.Remove(filepath.Dir(dest))
 			}
 		}

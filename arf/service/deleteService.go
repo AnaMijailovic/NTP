@@ -42,15 +42,19 @@ func postorderDelete(node *model.Node, deleteData *model.DeleteData, filesDelete
 
 	// Wait for all child nodes to be processed
 	wg.Wait()
-	
+
 	file := node.Element.(model.File)
 	stat, _ := os.Stat(file.FullPath)
 	size := stat.Size()
 
-	// Check deletion criteria
-	if ( deleteData.Empty && size == 0 ) ||
-		(deleteData.CreatedBefore.After(file.Created) && (!file.IsDir || file.Size == 0)) ||
-		(deleteData.NotAccessedAfter.After(file.Accessed) && (!file.IsDir || file.Size == 0)){
+	empty := false
+	if file.IsDir {
+		empty, _ = IsEmpty(file.FullPath)
+	}
+
+	if ( deleteData.Empty && (size == 0 || empty)) ||
+		(deleteData.CreatedBefore.After(file.Created) && (!file.IsDir || empty)) ||
+		(deleteData.NotAccessedAfter.After(file.Accessed) && (!file.IsDir || empty)){
 		err := os.Remove(file.FullPath)
 		if err != nil {
 			fmt.Println(err)
@@ -96,9 +100,15 @@ func postorderDeleteS(node *model.Node, deleteData *model.DeleteData, filesDelet
 	stat, _ := os.Stat(file.FullPath)
 	size := stat.Size()
 
-	if ( deleteData.Empty && size == 0 ) ||
-		(deleteData.CreatedBefore.After(file.Created) && (!file.IsDir || file.Size == 0)) ||
-		(deleteData.NotAccessedAfter.After(file.Accessed) && (!file.IsDir || file.Size == 0)){
+	empty := false
+
+	if file.IsDir {
+		empty, _ = IsEmpty(file.FullPath)
+	}
+
+	if ( deleteData.Empty && (size == 0 || empty)) ||
+		(deleteData.CreatedBefore.After(file.Created) && (!file.IsDir || empty)) ||
+		(deleteData.NotAccessedAfter.After(file.Accessed) && (!file.IsDir || empty)){
 		err := os.Remove(file.FullPath)
 		if err != nil {
 			fmt.Println(err)
