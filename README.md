@@ -22,7 +22,7 @@
          *) Informacije o izmenama sačuvati u posebnom fajlu na osnovu kog bi bilo omogućeno vraćanje 
             originalne strukture
             
-### 3. Preimenovanje svih foldera/fajlova na zadatoj putanji
+### 3. Preimenovanje svih fajlova na zadatoj putanji
         a) Generisanjem random naziva
         b) Zadavanjem prefiksa/sufiksa koji se dodaju na postojeći naziv
         c) Uklanjanjem zadatog dela naziva ili zamenom tog dela naziva novim
