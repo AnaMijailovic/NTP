@@ -49,7 +49,6 @@
 Sve operacije bi bile implementirane u programskom jeziku *Go(lang)* uz paralelizaciju (*goroutine*) gde je to moguće (npr. prilikom učitavanja fajlova i foldera i kreiranja stabla).
 
 GUI deo aplikacije iz kog je moguće pozivanje svih navedenih operacija bi bio implementiran uz oslonac na programski jezik *Pharo*. 
-Korisnicima će biti omogućen rad korišćenjem odgovarajućih formi, a nešto naprednijim korisnicima biće ponuđeno i tekstualno polje
-u koje je moguće unositi komande jednostavnog jezika specifičnog za domen koji će biti razvijen.
+Korisnicima će biti omogućen rad korišćenjem odgovarajućih formi.
 
 Takođe bi bilo moguće i pozivanje operacija(2, 3 i 4) iz komandne linije (implementacija korišćenjem [*Cobra*](https://github.com/spf13/cobra) *Golang* biblioteke).
