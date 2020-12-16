@@ -21,28 +21,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// recoverCmd represents the recover command
-var recoverCmd = &cobra.Command{
-	Use:   "recover [recoveryFilePath]",
-	Short: "Undoes rename/reorganize operations",
-	Long: `Enables restoring the original file names / file organization.
-The path to the file containing the recovery data must be provided.`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("you must provide a path argument")
-		}
+ 	// recoverCmd represents the recover command
+	var recoverCmd = &cobra.Command{
+		Use:   "recover [recoveryFilePath]",
+		Short: "Undoes rename/reorganize operations",
+		Long: `Enables restoring the original file names / file organization.
+		The path to the file containing the recovery data must be provided.`,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return errors.New("you must provide a path argument")
+			}
 
-		return CheckPaths(args)
-	},
-	Run: func(cmd *cobra.Command, args []string) {
+			return CheckPaths(args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
 
-		errs := service.Recover(args[0])
-		PrintErrors(errs)
+			errs := service.Recover(args[0])
+			PrintErrors(errs)
 
-	},
-}
+		},
+	}
 
-func init() {
-	rootCmd.AddCommand(recoverCmd)
+	func init() {
+		rootCmd.AddCommand(recoverCmd)
+	}
 
-}
+
+

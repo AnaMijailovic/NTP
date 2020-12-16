@@ -1,4 +1,4 @@
-package net
+package controller
 
 import (
 	"encoding/json"
@@ -13,8 +13,8 @@ import (
 func Serve() {
 
 	http.HandleFunc("/api/fileTree", GetFileTree)
-	http.HandleFunc("/api/fileTypeData", GetChartData)
-	http.HandleFunc("/api/deleteFiles", DeleteFiles)
+	http.HandleFunc("/api/chartData", GetChartData)
+	http.HandleFunc("/api/delete", DeleteFiles)
 	http.HandleFunc("/api/rename", RenameFiles)
 	http.HandleFunc("/api/reorganize", ReorganizeFiles)
 	http.HandleFunc("/api/recover", Recover)

@@ -12,7 +12,7 @@ import (
 
 
 // Returns a file content type.
-// Uses the net/http package's DetectContentType
+// Uses the controller/http package's DetectContentType
 func getFileContentType(filePath string) (string, error) {
 	out, err := os.Open(filePath)
 	if err != nil {
@@ -27,7 +27,7 @@ func getFileContentType(filePath string) (string, error) {
 		return "", err
 	}
 
-	// Use the net/http package's handy DetectContentType function. Always returns a valid
+	// Use the controller/http package's handy DetectContentType function. Always returns a valid
 	// content-type by returning "application/octet-stream" if no others seemed to match.
 	contentType := http.DetectContentType(buffer)
 	contentType = strings.Split(contentType, ";")[0]

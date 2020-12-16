@@ -22,36 +22,37 @@ type GetLabelFunc func(filePath string) (string, error)
 // Links that helped:
 // https://blog.golang.org/pipelines
 // https://stackoverflow.com/questions/38170852/is-this-an-idiomatic-worker-thread-pool-in-go/38172204#38172204
+// https://codereview.stackexchange.com/questions/114376/bruteforce-md5-password-cracker
 
-type Walk struct {
-	root string
-	recursive bool
-	walkFn WalkFunc
-	jobs chan string
-	errs chan error
-	jobsWg sync.WaitGroup // for each job, not worker!
-	errsWg sync.WaitGroup // wait group for collecting errors
-	poolSize int
-}
+	type Walk struct {
+		root string
+		recursive bool
+		walkFn WalkFunc
+		jobs chan string
+		errs chan error
+		jobsWg sync.WaitGroup // for each job, not worker!
+		errsWg sync.WaitGroup // wait group for collecting errors
+		poolSize int
+	}
 
 // Collect errors from the errs chanel
 // Necessary to avoid blockage if the errs channel buffer is filled
-func (walk *Walk) GetErrors(errs *[]error){
-	defer walk.errsWg.Done()
-	for err := range walk.errs {
-		*errs = append(*errs, err)
+	func (walk *Walk) GetErrors(errs *[]error){
+		defer walk.errsWg.Done()
+		for err := range walk.errs {
+			*errs = append(*errs, err)
+		}
 	}
-}
 
 // Workers thread pool will be created.
 // Worker takes jobs form the job channel
 // and calls walkPath function for each of them.
-func (walk *Walk) startWorker() {
-	for job := range walk.jobs {
-		walk.walkPath(job)
-		walk.jobsWg.Done()
+	func (walk *Walk) startWorker() {
+		for job := range walk.jobs {
+			walk.walkPath(job)
+			walk.jobsWg.Done()
+		}
 	}
-}
 
 // Calls walk.walkFunc for the file on the path arg.
 // If path is a directory, reads all its subfiles
@@ -95,7 +96,6 @@ func (walk *Walk) walkPath(path string) {
 				walk.jobsWg.Done()
 				walk.walkPath(subfilePath)
 			}
-
 		}
 	}
 }
@@ -114,7 +114,7 @@ func (walk *Walk) startWalking() []error{
 	go walk.GetErrors(&errs)
 
 	// Create workers pool
-	for i := 0; i <= walk.poolSize; i++ {
+	for i := 0; i < walk.poolSize; i++ {
 		go walk.startWorker()
 	}
 
@@ -124,7 +124,7 @@ func (walk *Walk) startWalking() []error{
 
 	walk.jobsWg.Wait()   // wait for all jobs to finish
 	close(walk.jobs)     // all jobs are done, close their channel
-	close(walk.errs)     // all worker threads are done, so it's save to close errors channel here
+	close(walk.errs)     // all worker threads are done, so it's safe to close errors channel here
 	walk.errsWg.Wait()   // wait for all errors to be collected from the channel
 
 	return errs

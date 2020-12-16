@@ -13,7 +13,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/AnaMijailovic/NTP/arf/net"
+	"github.com/AnaMijailovic/NTP/arf/controller"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ var serveCmd = &cobra.Command{
 	Long: ``,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		net.Serve()
+		controller.Serve()
 	},
 }
 

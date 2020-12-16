@@ -65,10 +65,14 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 
 	// Set local flags
-	deleteCmd.Flags().BoolP("recursive", "r", false, "Recursive or not (default: false)")
-	deleteCmd.Flags().BoolP("empty", "e", false, "Delete empty files")
+	deleteCmd.Flags().BoolP("recursive", "r", false,
+		                     "Recursive or not (default: false)")
+	deleteCmd.Flags().BoolP("empty", "e", false,
+		               "Delete empty files")
 	deleteCmd.Flags().StringP("createdBefore", "b", "",
 		"Delete files created before the given date (dd-mm-yyyy)")
 	deleteCmd.Flags().StringP("notAccessedAfter", "a", "",
 		"Delete files not accessed after the given date (dd-mm-yyyy)")
 }
+
+

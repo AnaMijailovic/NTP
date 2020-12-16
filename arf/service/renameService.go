@@ -62,7 +62,7 @@ func Rename(renameData *model.RenameData) []error {
 	}
 
 	// Call walk function
-	walk := Walk{ root: renameData.Path, recursive: renameData.Recursive, walkFn: walkFn, poolSize: 5}
+	walk := Walk{ root: renameData.Path, recursive: renameData.Recursive, walkFn: walkFn, poolSize: 20}
 	walkErrs := walk.startWalking()
 
 	return walkErrs
